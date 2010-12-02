@@ -3,6 +3,6 @@ require "rubygems"
 gem "bundler"
 require "bundler"
 
-Bundler.load
+Bundler.setup
 
 # Eventually, a REPL will probably go here.

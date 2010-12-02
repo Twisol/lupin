@@ -17,6 +17,6 @@ Gem::Specification.new do |s|
   s.files = Dir['lib/**/*'].reject {|f| f =~ /\.rbc$/}
   
   s.add_dependency 'citrus', '~> 2.2.0'
-  s.add_development_dependency 'rspec', '~> 2.1.0'
+  s.add_development_dependency 'rspec', '~> 2.2.0'
   s.add_development_dependency 'bundler', '~> 1.0.0'
 end

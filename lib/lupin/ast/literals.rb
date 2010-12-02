@@ -5,6 +5,10 @@ module Lupin::AST
     def initialize (val)
       @value = val
     end
+    
+    def == (literal)
+      @value == literal.value
+    end
   end
   
   class String < Literal
@@ -35,7 +39,7 @@ module Lupin::AST
   
   class Number < Literal
     def initialize (base, exponent)
-      super(base * (10 ** exponent))
+      super(base.to_f * (10 ** exponent))
     end
   end
   
