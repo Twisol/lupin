@@ -38,7 +38,7 @@ module Lupin::AST
   end
   
   class Number < Literal
-    def initialize (base, exponent)
+    def initialize (base, exponent=0)
       super(base.to_f * (10 ** exponent))
     end
   end

@@ -16,12 +16,12 @@ describe Lupin::Parser do
   end
   
   it "matches numbers" do
-    check(:number, "10", AST::Number.new(10, 0))
-    check(:number, "10.", AST::Number.new(10, 0))
+    check(:number, "10", AST::Number.new(10))
+    check(:number, "10.", AST::Number.new(10))
     check(:number, "10e2", AST::Number.new(10, 2))
     check(:number, "10e-1", AST::Number.new(10, -1))
     check(:number, "10.e4", AST::Number.new(10, 4))
-    check(:number, ".5", AST::Number.new(0.5, 0))
+    check(:number, ".5", AST::Number.new(0.5))
     check(:number, ".5e2", AST::Number.new(0.5, 2))
     # Negative numbers are handled by the unary minus operator, not as a literal.
   end
@@ -30,5 +30,14 @@ describe Lupin::Parser do
     check(:string, "'Hel\\\"lo.'", AST::String.new("Hel\"lo."))
     check(:string, "\"Hel\\'lo.\"", AST::String.new("Hel'lo."))
     check(:string, "[==[foo\\\"bar\\'baz\\r\\n]==]", AST::LongString.new("foo\\\"bar\\'baz\\r\\n"))
+  end
+  
+  it "matches tables" do
+    check(:table, "{}", AST::Table.new())
+    # Not sure how to proceed with comparing tables here.
+  end
+  
+  it "matches binary operations" do
+    check(:expression, "1 + 1", AST::Addition.new(AST::Number.new(1), AST::Number.new(1)))
   end
 end

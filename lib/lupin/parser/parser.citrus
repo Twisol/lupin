@@ -7,23 +7,24 @@ grammar Lupin::Parser
     list:stat* { matches.map(&:value) }
   end
   
-  rule stat
-    (statement:exp WS? ';'?) {
-      statement.value
+  rule statement
+    (expression WS? ';'?) {
+      expression.value
     }
   end
   
-  rule exp
-    (lhs:primitive
-     r:(WS? op:bin_op WS? rhs:exp)?
-    ) {
-      if r == ''
-        lhs.value
-      else
-        op, rhs = r.matches[0].op, r.matches[0].rhs
-        op.value.new(lhs.value, rhs.value)
-      end
-    }
+  # TODO: Implement operator precedence
+  rule expression
+    ( (lhs:primitive WS? op:bin_op WS? rhs:expression) { op.value.new(lhs.value, rhs.value) }
+    | (op:un_op WS? expression) { un_op.value.new(expression.value) }
+    | primitive
+    )
+  end
+  
+  rule un_op
+    ( '-' { Lupin::AST::UnaryMinus }
+    | (WS 'not' WS) { Lupin::AST::Negation }
+    )
   end
   
   rule bin_op
@@ -45,9 +46,9 @@ grammar Lupin::Parser
   end
   
   rule table
-    ('{' WS? list:fieldlist WS? '}') {
-      Lupin::AST::Table.new(list.value)
-    }
+    ( ('{' WS? list:fieldlist WS? '}') { Lupin::AST::Table.new(list.value) }
+    | ('{' WS? '}') { Lupin::AST::Table.new() }
+    )
   end
   
   rule fieldlist
@@ -60,9 +61,9 @@ grammar Lupin::Parser
   end
   
   rule field
-    ( ('[' WS? k:exp WS? ']' WS? '=' WS? v:exp)
+    ( ('[' WS? k:expression WS? ']' WS? '=' WS? v:expression)
         { Lupin::AST::Field.new(k.value, v.value) }
-    | (exp:exp '')
+    | (exp:expression '')
         { Lupin::AST::Field.new(nil, exp.value) }
     )
   end
@@ -91,8 +92,13 @@ grammar Lupin::Parser
     | /\[(=*)\[.*?\]\1\]/m { Lupin::AST::LongString.new(match(/\[(=*)\[(.*?)\]\1\]/m)[2]) }
     )
   end
+  #'#
   
   rule WS
-    /[ \n\t]+/ { nil }
+    (/[ \n\t]+/ | comment)+ { nil }
+  end
+  
+  rule comment
+    "--" (/\[(=*)\[.*?\]\1\]/ | /.*\n/)
   end
 end

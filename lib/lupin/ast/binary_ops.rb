@@ -5,6 +5,12 @@ module Lupin::AST
     def initialize (lhs, rhs)
       @lhs, @rhs = lhs, rhs
     end
+    
+    def == (other)
+      self.class == other.class &&
+      self.lhs == other.lhs &&
+      self.rhs == other.rhs
+    end
   end
   
   Addition = Class.new(BinaryOp)
