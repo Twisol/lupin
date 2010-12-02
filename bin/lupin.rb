@@ -4,5 +4,6 @@ gem "bundler"
 require "bundler"
 
 Bundler.setup
+require "lupin"
 
-# Eventually, a REPL will probably go here.
+# Eventually, a REPL will go here.

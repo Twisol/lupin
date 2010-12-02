@@ -8,15 +8,33 @@ grammar Lupin::Parser
   end
   
   rule stat
-    (statement:
-     exp
-     WS? ';'?
-    ) {
+    (statement:exp WS? ';'?) {
       statement.value
     }
   end
   
   rule exp
+    (lhs:primitive
+     r:(WS? op:bin_op WS? rhs:exp)?
+    ) {
+      if r == ''
+        lhs.value
+      else
+        op, rhs = r.matches[0].op, r.matches[0].rhs
+        op.value.new(lhs.value, rhs.value)
+      end
+    }
+  end
+  
+  rule bin_op
+    ( '+' { Lupin::AST::Addition }
+    | '-' { Lupin::AST::Subtraction }
+    | '*' { Lupin::AST::Multiplication }
+    | '/' { Lupin::AST::Division }
+    )
+  end
+  
+  rule primitive
     ( table
     | number
     | string
