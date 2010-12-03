@@ -175,7 +175,8 @@ grammar Lupin::Parser
   
   ### Number
   rule number
-    ( (base exponent) { Lupin::AST::Number.new(base.value, exponent.value) }
+    ( /0x[A-Fa-f0-9]+/ { Lupin::AST::Number.new(to_i(16)) }
+    | (base exponent) { Lupin::AST::Number.new(base.value, exponent.value) }
     | (base '') { Lupin::AST::Number.new(base.value) }
     )
   end

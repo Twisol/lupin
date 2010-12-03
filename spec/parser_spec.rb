@@ -23,6 +23,7 @@ describe Lupin::Parser do
     check(:number, "10.e4", AST::Number.new(10, 4))
     check(:number, ".5", AST::Number.new(0.5))
     check(:number, ".5e2", AST::Number.new(0.5, 2))
+    check(:number, "0xFF", AST::Number.new(0xFF))
     # Negative numbers are handled by the unary minus operator, not as a literal.
   end
   
