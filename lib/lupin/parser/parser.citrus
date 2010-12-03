@@ -13,25 +13,48 @@ grammar Lupin::Parser
     }
   end
   
-  # TODO: Implement operator precedence
   rule expression
-    ( (lhs:primitive WS? op:bin_op WS? rhs:expression) { op.value.new(lhs.value, rhs.value) }
-    | (op:un_op WS? expression) { un_op.value.new(expression.value) }
+    add_expr
+  end
+  
+  rule add_expr
+    ( (lhs:mul_expr
+       op:( (WS? '+' WS?) { Lupin::AST::Addition }
+          | (WS? '-' WS?) { Lupin::AST::Subtraction }
+          )
+       rhs:add_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | mul_expr
+    )
+  end
+  
+  rule mul_expr
+    ( (lhs:not_expr
+       op:( (WS? '*' WS?) { Lupin::AST::Multiplication }
+          | (WS? '/' WS?) { Lupin::AST::Division }
+          )
+       rhs:mul_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | not_expr
+    )
+  end
+  
+  rule not_expr
+    ( ( (lhs:paren_expr
+         op:(WS 'not' WS) { Lupin::AST::Negation }
+         rhs:paren_expr
+        ) { op.value.new(lhs.value, rhs.value) }
+      | (op:('-' WS?) { Lupin::AST::UnaryMinus }
+         rhs:paren_expr
+        ) { op.value.new(rhs.value) }
+      )
+    | paren_expr
+    )
+  end
+  
+  rule paren_expr
+    ( ('(' WS? expression WS? ')') { expression.value }
     | primitive
-    )
-  end
-  
-  rule un_op
-    ( '-' { Lupin::AST::UnaryMinus }
-    | (WS 'not' WS) { Lupin::AST::Negation }
-    )
-  end
-  
-  rule bin_op
-    ( '+' { Lupin::AST::Addition }
-    | '-' { Lupin::AST::Subtraction }
-    | '*' { Lupin::AST::Multiplication }
-    | '/' { Lupin::AST::Division }
     )
   end
   
