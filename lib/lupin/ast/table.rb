@@ -13,11 +13,9 @@ module Lupin::AST
     end
   end
   
-  class Field
-    attr_reader :key, :val
-    
-    def initialize (key, val)
-      @key, @val = key, val
+  class TableGet
+    def initialize (tbl, key)
+      @tbl, @key = tbl, key
     end
   end
 end

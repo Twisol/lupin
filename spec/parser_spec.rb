@@ -34,7 +34,8 @@ describe Lupin::Parser do
   end
   
   it "matches tables" do
-    check(:table, "{}", AST::Table.new())
+    check(:table, "{}", AST::Table.new)
+    check(:table, "{1}", AST::Table.new([[nil, AST::Number.new(1)]]))
     # Not sure how to proceed with comparing tables here.
   end
   

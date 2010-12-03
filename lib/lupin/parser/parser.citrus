@@ -4,25 +4,51 @@ grammar Lupin::Parser
   end
   
   rule chunk
-    list:stat* { matches.map(&:value) }
+    list:statement* { matches.map(&:value) }
   end
   
   rule statement
-    (expression WS? ';'?) {
-      expression.value
-    }
+    (stat:( functioncall
+          )
+     WS? ';'?
+    ) { stat.value }
   end
   
   rule identifier
-    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
+    /[A-Za-z_][A-Za-z_0-9]*/
   end
   
-  rule expression
-    or_expr
+  ### Function invocation
+  rule functioncall
+    (var:( variable
+         | ('(' WS? expression WS? ')') { expression.value }
+         )
+     args:args+
+    ) {
+      f = var.value
+      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.value)}
+      f
+    }
+  end
+  
+  rule args
+    ( ('(' WS? explist WS? ')' WS?) { explist.value }
+    | ('(' WS? ')' WS?) { [] }
+    | (table WS?) { [table] }
+    | (string WS?) { [string] }
+    )
+  end
+  
+  ### Variable access
+  rule variable
+    ( (identifier '') { Lupin::AST::TableGet.new(nil, identifier.value) }
+  # | prefix_expr WS? '[' WS? expression WS? ']'
+  # | prefix_expr WS? '.' identifier
+    )
   end
   
   ####
-  ## Operators (and Precedence)
+  ## Expressions (Operators & Precedence)
   #
   # ()
   # ^
@@ -36,6 +62,18 @@ grammar Lupin::Parser
   #
   ##
   ####
+  
+  rule explist
+    (e:expression
+     list:(WS? ',' WS? e:expression)*
+    ) {
+      [self].concat(list.matches).map {|m| m.e.value}
+    }
+  end
+  
+  rule expression
+    or_expr
+  end
   
   rule or_expr
     ( (lhs:and_expr
@@ -115,17 +153,22 @@ grammar Lupin::Parser
   end
   
   rule pow_expr
-    ( (lhs:paren_expr
+    ( (lhs:basic_expr
        op:(WS? '^' WS?) { Lupin::AST::Power }
        rhs:pow_expr
       ) { op.value.new(lhs.value, rhs.value) }
-    | paren_expr
+    | basic_expr
     )
   end
   
-  rule paren_expr
+  rule basic_expr
+    ( prefix_expr | primitive )
+  end
+  
+  rule prefix_expr
     ( ('(' WS? expression WS? ')') { expression.value }
-    | primitive
+    | variable
+    | functioncall
     )
   end
   
@@ -145,8 +188,8 @@ grammar Lupin::Parser
   
   ### Table
   rule table
-    ( ('{' WS? list:fieldlist WS? '}') { Lupin::AST::Table.new(list.value) }
-    | ('{' WS? '}') { Lupin::AST::Table.new() }
+    ( ('{' WS? fieldlist WS? '}') { Lupin::AST::Table.new(fieldlist.value) }
+    | ('{' WS? '}') { Lupin::AST::Table.new }
     )
   end
   
@@ -161,11 +204,11 @@ grammar Lupin::Parser
   
   rule field
     ( ('[' WS? k:expression WS? ']' WS? '=' WS? v:expression)
-        { Lupin::AST::Field.new(k.value, v.value) }
+        { [k.value, v.value] }
     | (k:identifier WS? '=' WS? v:expression)
-        { Lupin::AST::Field.new(k.value, v.value) }
-    | (exp:expression '')
-        { Lupin::AST::Field.new(nil, exp.value) }
+        { [k.value, v.value] }
+    | (v:expression '')
+        { [nil, v.value] }
     )
   end
   
