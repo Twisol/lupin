@@ -17,4 +17,17 @@ module Lupin::AST
   Subtraction = Class.new(BinaryOp)
   Multiplication = Class.new(BinaryOp)
   Division = Class.new(BinaryOp)
+  Power = Class.new(BinaryOp)
+  
+  OrComp = Class.new(BinaryOp)
+  AndComp = Class.new(BinaryOp)
+  
+  LessThan = Class.new(BinaryOp)
+  GreaterThan = Class.new(BinaryOp)
+  AtMost = Class.new(BinaryOp)
+  AtLeast = Class.new(BinaryOp)
+  NotEqual = Class.new(BinaryOp)
+  Equal = Class.new(BinaryOp)
+  
+  Concatenate = Class.new(BinaryOp)
 end

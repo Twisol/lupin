@@ -13,8 +13,70 @@ grammar Lupin::Parser
     }
   end
   
+  rule identifier
+    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
+  end
+  
   rule expression
-    add_expr
+    or_expr
+  end
+  
+  ####
+  ## Operators (and Precedence)
+  #
+  # ()
+  # ^
+  # not -(unary)
+  # * /
+  # + -
+  # ..
+  # < > <= >= ~= ==
+  # and
+  # or
+  #
+  ##
+  ####
+  
+  rule or_expr
+    ( (lhs:and_expr
+       op:(WS 'or' WS) { Lupin::AST::OrComp }
+       rhs:or_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | and_expr
+    )
+  end
+  
+  rule and_expr
+    ( (lhs:eql_expr
+       op:(WS 'and' WS) { Lupin::AST::AndComp }
+       rhs:and_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | eql_expr
+    )
+  end
+  
+  rule eql_expr
+    ( (lhs:concat_expr
+       op:( (WS? '<' WS?) { Lupin::AST::LessThan }
+          | (WS? '>' WS?) { Lupin::AST::GreaterThan }
+          | (WS? '<=' WS?) { Lupin::AST::AtMost }
+          | (WS? '>=' WS?) { Lupin::AST::AtLeast }
+          | (WS? '~=' WS?) { Lupin::AST::NotEqual }
+          | (WS? '==' WS?) { Lupin::AST::Equal }
+          )
+       rhs:eql_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | concat_expr
+    )
+  end
+  
+  rule concat_expr
+    ( (lhs:add_expr
+       op:(WS? '..' WS?) { Lupin::AST::Concatenate }
+       rhs:concat_expr
+      ) { op.value.new(lhs.value, rhs.value) }
+    | add_expr
+    )
   end
   
   rule add_expr
@@ -40,14 +102,23 @@ grammar Lupin::Parser
   end
   
   rule not_expr
-    ( ( (lhs:paren_expr
+    ( ( (lhs:pow_expr
          op:(WS 'not' WS) { Lupin::AST::Negation }
-         rhs:paren_expr
+         rhs:not_expr
         ) { op.value.new(lhs.value, rhs.value) }
       | (op:('-' WS?) { Lupin::AST::UnaryMinus }
-         rhs:paren_expr
+         rhs:pow_expr
         ) { op.value.new(rhs.value) }
       )
+    | pow_expr
+    )
+  end
+  
+  rule pow_expr
+    ( (lhs:paren_expr
+       op:(WS? '^' WS?) { Lupin::AST::Power }
+       rhs:pow_expr
+      ) { op.value.new(lhs.value, rhs.value) }
     | paren_expr
     )
   end
@@ -58,6 +129,10 @@ grammar Lupin::Parser
     )
   end
   
+  
+  ####
+  ## Basic data types
+  ####
   rule primitive
     ( table
     | number
@@ -68,6 +143,7 @@ grammar Lupin::Parser
     )
   end
   
+  ### Table
   rule table
     ( ('{' WS? list:fieldlist WS? '}') { Lupin::AST::Table.new(list.value) }
     | ('{' WS? '}') { Lupin::AST::Table.new() }
@@ -86,6 +162,8 @@ grammar Lupin::Parser
   rule field
     ( ('[' WS? k:expression WS? ']' WS? '=' WS? v:expression)
         { Lupin::AST::Field.new(k.value, v.value) }
+    | (k:identifier WS? '=' WS? v:expression)
+        { Lupin::AST::Field.new(k.value, v.value) }
     | (exp:expression '')
         { Lupin::AST::Field.new(nil, exp.value) }
     )
@@ -95,20 +173,22 @@ grammar Lupin::Parser
     ';' | ','
   end
   
-  rule identifier
-    /[A-Za-z_][A-Za-z0-9]*/ { Lupin::AST::String.new(to_s) }
+  ### Number
+  rule number
+    ( (base exponent) { Lupin::AST::Number.new(base.value, exponent.value) }
+    | (base '') { Lupin::AST::Number.new(base.value) }
+    )
   end
   
-  rule number
-    (base:/\d*\.\d+|\d+\.?/ { to_f }
-     e:exponent? { matches.length > 0 ? exponent.value : 0 }
-    ) { Lupin::AST::Number.new(base.value, e.value) }
+  rule base
+    /\d*\.\d+|\d+\.?/ { to_f }
   end
   
   rule exponent
     ([Ee] e:/[+-]?\d+/) { e.to_i }
   end  
   
+  ### String
   rule string
     ( ("\"" s:/(\\(?:['"abfnrtv\n\r]|\d{1,3})|[^"\n])*/ "\"") { Lupin::AST::String.new(s.value) }
     | ("\'" s:/(\\(?:['"abfnrtv\n\r]|\d{1,3})|[^'\n])*/ "\'") { Lupin::AST::String.new(s.value) }
@@ -117,8 +197,9 @@ grammar Lupin::Parser
   end
   #'#
   
+  ### Whitespace and comments
   rule WS
-    (/[ \n\t]+/ | comment)+ { nil }
+    (/[ \n\t]+/ | comment)+
   end
   
   rule comment
