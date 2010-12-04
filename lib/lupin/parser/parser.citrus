@@ -64,37 +64,38 @@ grammar Lupin::Parser::Lua
   
   rule or_expr
     (lhs:and_expr
-     list:(op:(WS? /\bor\b/ WS?) { Lupin::AST::OrComp }
-           rhs:and_expr
+     list:(WS? op:(/\bor\b/) { Lupin::AST::OrComp }
+           WS? rhs:and_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
   end
   
   rule and_expr
     (lhs:eql_expr
-     list:(op:(WS? /\band\b/ WS?) { Lupin::AST::AndComp }
-           rhs:eql_expr
+     list:(WS? op:(/\band\b/) { Lupin::AST::AndComp }
+           WS? rhs:eql_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
   end
   
   rule eql_expr
     (lhs:concat_expr
-     list:(op:( (WS? '<' WS?) { Lupin::AST::LessThan }
-              | (WS? '>' WS?) { Lupin::AST::GreaterThan }
-              | (WS? '<=' WS?) { Lupin::AST::AtMost }
-              | (WS? '>=' WS?) { Lupin::AST::AtLeast }
-              | (WS? '~=' WS?) { Lupin::AST::NotEqual }
-              | (WS? '==' WS?) { Lupin::AST::Equal }
-              )
-           rhs:concat_expr
+     list:(WS? op:( '<' { Lupin::AST::LessThan }
+                  | '>' { Lupin::AST::GreaterThan }
+                  | '<=' { Lupin::AST::AtMost }
+                  | '>=' { Lupin::AST::AtLeast }
+                  | '~=' { Lupin::AST::NotEqual }
+                  | '==' { Lupin::AST::Equal }
+                  )
+           WS? rhs:concat_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
   end
   
   rule concat_expr
     (list:(lhs:add_expr
-           op:(WS? '..' WS?) { Lupin::AST::Concatenate }
+           WS? op:('..') { Lupin::AST::Concatenate }
+           WS?
           )*
      rhs:add_expr
     ) <Lupin::Parser::RightAssoc>
@@ -102,30 +103,32 @@ grammar Lupin::Parser::Lua
   
   rule add_expr
     (lhs:mul_expr
-     list:(op:( (WS? '+' WS?) { Lupin::AST::Addition }
-              | (WS? '-' WS?) { Lupin::AST::Subtraction }
-              )
-           rhs:mul_expr
+     list:(WS? op:( '+' { Lupin::AST::Addition }
+                  | '-' { Lupin::AST::Subtraction }
+                  )
+           WS? rhs:mul_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
   end
   
   rule mul_expr
     (lhs:not_expr
-     list:(op:( (WS? '*' WS?) { Lupin::AST::Multiplication }
-              | (WS? '/' WS?) { Lupin::AST::Division }
-              | (WS? '%' WS?) { Lupin::AST::Modulo }
-              )
-           rhs:not_expr
+     list:(WS? op:( '*' { Lupin::AST::Multiplication }
+                  | '/' { Lupin::AST::Division }
+                  | '%' { Lupin::AST::Modulo }
+                  )
+           WS? rhs:not_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
   end
   
   rule not_expr
-    (op:( (WS? /\bnot\b/ WS?) { Lupin::AST::Negation }
-        | (WS? '-' WS?) { Lupin::AST::UnaryMinus }
-        | (WS? '#' WS?) { Lupin::AST::Length }
-        )*
+    (list:(WS? op:( /\bnot\b/ { Lupin::AST::Negation }
+                  | '-' { Lupin::AST::UnaryMinus }
+                  | '#' { Lupin::AST::Length }
+                  )
+           WS?
+          )*
      rhs:pow_expr
     ) <Lupin::Parser::Unary>
   end

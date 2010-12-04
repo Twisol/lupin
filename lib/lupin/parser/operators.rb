@@ -24,8 +24,8 @@ module Lupin::Parser
   module Unary
     def value
       expr = rhs.value
-      op.matches.reverse_each do |m|
-        expr = m.value.new(expr)
+      list.matches.reverse_each do |m|
+        expr = m.op.value.new(expr)
       end
       
       expr
