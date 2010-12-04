@@ -6,12 +6,12 @@ module Lupin
   require "lupin/compiler"
   
   def self.eval (str)
-    ast = Lupin::Parser.parse(str, :root => :expression).value
-    m = Module.new
-    (class << m; self; end).dynamic_method :x do |g|
+    o = Object.new
+    Rubinius.object_metaclass(o).dynamic_method :call do |g|
+      ast = Lupin::Parser.parse(str, :root => :expression).value
       Lupin::Compiler.compile(ast, g)
       g.ret
     end
-    m.x
+    o.call
   end
 end
