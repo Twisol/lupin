@@ -138,16 +138,11 @@ grammar Lupin::Parser::Lua
   end
   
   rule not_expr
-    ( (lhs:pow_expr
-       list:(op:(WS 'not' WS) { Lupin::AST::Negation }
-             rhs:pow_expr
-            )*
-      ) <Lupin::Parser::LeftAssoc>
-    | (op:((WS? '-' WS?) { Lupin::AST::UnaryMinus }
-          )+
-       rhs:pow_expr
-      ) <Lupin::Parser::Unary>
-    )
+    (op:((WS? '-' WS?) { Lupin::AST::UnaryMinus }
+         (WS 'not' WS) { Lupin::AST::Negation }
+        )*
+     rhs:pow_expr
+    ) <Lupin::Parser::Unary>
   end
   
   rule pow_expr
