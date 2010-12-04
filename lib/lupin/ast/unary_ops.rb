@@ -29,4 +29,6 @@ module Lupin::AST
       g.send :"==", 1
     end
   end
+  
+  Length = Class.new(UnaryOp)
 end

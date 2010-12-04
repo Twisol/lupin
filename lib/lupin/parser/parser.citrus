@@ -15,10 +15,6 @@ grammar Lupin::Parser::Lua
     ) { stat.value }
   end
   
-  rule identifier
-    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
-  end
-  
   ### Function invocation
   rule functioncall
     (var:( variable
@@ -38,19 +34,6 @@ grammar Lupin::Parser::Lua
     | (table WS?) { [table] }
     | (string WS?) { [string] }
     )
-  end
-  
-  ### Variable access
-  rule variable
-    ( identifier
-      list:( (WS? '.' WS? identifier) { identifier.value }
-           | (WS? '[' WS? expression WS? ']') { expression.value }
-           )*
-    ) {
-      t = nil
-      [identifier].concat(list.matches).each {|m| t = Lupin::AST::TableGet.new(t, m.value) }
-      t
-    }
   end
   
   ####
@@ -131,6 +114,7 @@ grammar Lupin::Parser::Lua
     (lhs:not_expr
      list:(op:( (WS? '*' WS?) { Lupin::AST::Multiplication }
               | (WS? '/' WS?) { Lupin::AST::Division }
+              | (WS? '%' WS?) { Lupin::AST::Modulo }
               )
            rhs:not_expr
           )*
@@ -140,6 +124,7 @@ grammar Lupin::Parser::Lua
   rule not_expr
     (op:( (WS? /\bnot\b/ WS?) { Lupin::AST::Negation }
         | (WS? '-' WS?) { Lupin::AST::UnaryMinus }
+        | (WS? '#' WS?) { Lupin::AST::Length }
         )*
      rhs:pow_expr
     ) <Lupin::Parser::Unary>
@@ -164,6 +149,22 @@ grammar Lupin::Parser::Lua
     )
   end
   
+  ### Variable access
+  rule variable
+    ( identifier
+      list:( (WS? '.' WS? identifier) { identifier.value }
+           | (WS? '[' WS? expression WS? ']') { expression.value }
+           )*
+    ) {
+      t = nil
+      [identifier].concat(list.matches).each {|m| t = Lupin::AST::TableGet.new(t, m.value) }
+      t
+    }
+  end
+  
+  rule identifier
+    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
+  end
   
   ####
   ## Basic data types
