@@ -9,6 +9,10 @@ module Lupin::AST
     def == (literal)
       @value == literal.value
     end
+    
+    def bytecode (g)
+      g.push_literal @value
+    end
   end
   
   class String < Literal

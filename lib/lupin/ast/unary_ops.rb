@@ -12,6 +12,13 @@ module Lupin::AST
     end
   end
   
-  UnaryMinus = Class.new(UnaryOp)
-  NegationS = Class.new(UnaryOp)
+  class UnaryMinus < UnaryOp
+    def bytecode (g)
+      # TODO: Implement lookup for __unm in @operand's metatable
+      @operand.bytecode(g)
+      g.send :"-@", 0
+    end
+  end
+  
+  Negation = Class.new(UnaryOp)
 end

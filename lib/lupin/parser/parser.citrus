@@ -15,7 +15,7 @@ grammar Lupin::Parser
   end
   
   rule identifier
-    /[A-Za-z_][A-Za-z_0-9]*/
+    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
   end
   
   ### Function invocation
@@ -41,10 +41,15 @@ grammar Lupin::Parser
   
   ### Variable access
   rule variable
-    ( (identifier '') { Lupin::AST::TableGet.new(nil, identifier.value) }
-  # | prefix_expr WS? '[' WS? expression WS? ']'
-  # | prefix_expr WS? '.' identifier
-    )
+    ( identifier
+      list:( (WS? '.' WS? identifier) { identifier.value }
+           | (WS? '[' WS? expression WS? ']') { expression.value }
+           )*
+    ) {
+      t = nil
+      [identifier].concat(list.matches).each {|m| t = Lupin::AST::TableGet.new(t, m.value) }
+      t
+    }
   end
   
   ####

@@ -13,11 +13,50 @@ module Lupin::AST
     end
   end
   
-  Addition = Class.new(BinaryOp)
-  Subtraction = Class.new(BinaryOp)
-  Multiplication = Class.new(BinaryOp)
-  Division = Class.new(BinaryOp)
-  Power = Class.new(BinaryOp)
+  class Addition < BinaryOp
+    def bytecode (g)
+      # TODO: Implement lookup of __add in @lhs's metatable
+      @lhs.bytecode(g)
+      @rhs.bytecode(g)
+      g.send :+, 1
+    end
+  end
+  
+  class Subtraction < BinaryOp
+    def bytecode (g)
+      # TODO: Implement lookup of __sub in @lhs's metatable
+      @lhs.bytecode(g)
+      @rhs.bytecode(g)
+      g.send :-, 1
+    end
+  end
+  
+  class Multiplication < BinaryOp
+    def bytecode (g)
+      # TODO: Implement lookup of __mul in @lhs's metatable
+      @lhs.bytecode(g)
+      @rhs.bytecode(g)
+      g.send :*, 1
+    end
+  end
+  
+  class Division < BinaryOp
+    def bytecode (g)
+      # TODO: Implement lookup of __div in @lhs's metatable
+      @lhs.bytecode(g)
+      @rhs.bytecode(g)
+      g.send :/, 1
+    end
+  end
+  
+  class Power < BinaryOp
+    def bytecode (g)
+      # TODO: Implement lookup of __pow in @lhs's metatable
+      @lhs.bytecode(g)
+      @rhs.bytecode(g)
+      g.send :**, 1
+    end
+  end
   
   OrComp = Class.new(BinaryOp)
   AndComp = Class.new(BinaryOp)
