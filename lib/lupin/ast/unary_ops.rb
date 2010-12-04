@@ -20,5 +20,13 @@ module Lupin::AST
     end
   end
   
-  Negation = Class.new(UnaryOp)
+  class Negation < UnaryOp
+    def bytecode (g)
+      @operand.bytecode(g)
+      g.send :"to_bool", 0
+      
+      g.push_false
+      g.send :"==", 1
+    end
+  end
 end

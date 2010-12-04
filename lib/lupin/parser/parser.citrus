@@ -81,7 +81,7 @@ grammar Lupin::Parser::Lua
   
   rule or_expr
     (lhs:and_expr
-     list:(op:(WS 'or' WS) { Lupin::AST::OrComp }
+     list:(op:(WS? /\bor\b/ WS?) { Lupin::AST::OrComp }
            rhs:and_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
@@ -89,7 +89,7 @@ grammar Lupin::Parser::Lua
   
   rule and_expr
     (lhs:eql_expr
-     list:(op:(WS 'and' WS) { Lupin::AST::AndComp }
+     list:(op:(WS? /\band\b/ WS?) { Lupin::AST::AndComp }
            rhs:eql_expr
           )*
     ) <Lupin::Parser::LeftAssoc>
@@ -138,8 +138,8 @@ grammar Lupin::Parser::Lua
   end
   
   rule not_expr
-    (op:((WS? '-' WS?) { Lupin::AST::UnaryMinus }
-         (WS 'not' WS) { Lupin::AST::Negation }
+    (op:( (WS? /\bnot\b/ WS?) { Lupin::AST::Negation }
+        | (WS? '-' WS?) { Lupin::AST::UnaryMinus }
         )*
      rhs:pow_expr
     ) <Lupin::Parser::Unary>
@@ -154,7 +154,7 @@ grammar Lupin::Parser::Lua
   end
   
   rule basic_expr
-    ( prefix_expr | primitive )
+    ( primitive | prefix_expr )
   end
   
   rule prefix_expr
@@ -232,7 +232,7 @@ grammar Lupin::Parser::Lua
   
   ### Whitespace and comments
   rule WS
-    (/[ \n\t]+/ | comment)+
+    /\b/? (/[ \n\t]+/ | comment)+ /\b/?
   end
   
   rule comment

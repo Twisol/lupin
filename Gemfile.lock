@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    lupin (0.0.1)
+    lupin (0.0.2)
       citrus (~> 2.2.0)
 
 GEM
