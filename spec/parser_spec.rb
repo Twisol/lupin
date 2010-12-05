@@ -46,6 +46,11 @@ describe Lupin::Parser do
   end
   
   it "matches binary operations" do
-    check(:expression, "1 + 1") { [:+, 1.0, 1.0] }
+    check(:expression, "1+2+3") { [:+, [:+, 1.0, 2.0], 3.0] }
+    check(:expression, "1-2-3") { [:-, [:-, 1.0, 2.0], 3.0] }
+    check(:expression, "1*2*3") { [:*, [:*, 1.0, 2.0], 3.0] }
+    check(:expression, "1/2/3") { [:/, [:/, 1.0, 2.0], 3.0] }
+    check(:expression, "1%2%3") { [:%, [:%, 1.0, 2.0], 3.0] }
+    check(:expression, "1^2^3") { [:**, 1.0, [:**, 2.0, 3.0]] }
   end
 end
