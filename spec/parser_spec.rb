@@ -8,38 +8,44 @@ describe Lupin::Parser do
     Lupin::Parser.parse(*args, &blk)
   end
   
-  def check (type, text, value)
+  def check (type, text)
     m = parse(text, :root => type)
-    m.should_not == nil
-    m.should == text
-    m.value.should == value
+    # Ensure that it matched everything
+    m.to_s.should == text
+    # Ensure that the AST is what we expected
+    m.value.sexp.should == yield
   end
   
   it "matches numbers" do
-    check(:number, "10", AST::Number.new(10))
-    check(:number, "10.", AST::Number.new(10))
-    check(:number, "10e2", AST::Number.new(10, 2))
-    check(:number, "10e-1", AST::Number.new(10, -1))
-    check(:number, "10.e4", AST::Number.new(10, 4))
-    check(:number, ".5", AST::Number.new(0.5))
-    check(:number, ".5e2", AST::Number.new(0.5, 2))
-    check(:number, "0xFF", AST::Number.new(0xFF))
+    check(:number, "10") { 10.0 }
+    check(:number, "10.") { 10.0 }
+    check(:number, "10e2") { 1000.0 }
+    check(:number, "10e-1") { 1.0 }
+    check(:number, "10.e4") { 100000.0 }
+    check(:number, ".5") { 0.5 }
+    check(:number, ".5e2") { 50.0 }
+    check(:number, "0xFF") { 0xFF }
     # Negative numbers are handled by the unary minus operator, not as a literal.
   end
   
   it "matches strings" do
-    check(:string, "'Hel\\\"lo.'", AST::String.new("Hel\"lo."))
-    check(:string, "\"Hel\\'lo.\"", AST::String.new("Hel'lo."))
-    check(:string, "[==[foo\\\"bar\\'baz\\r\\n]==]", AST::LongString.new("foo\\\"bar\\'baz\\r\\n"))
+    check(:string, "'Hel\\\"lo.'") { "Hel\"lo." }
+    check(:string, "\"Hel\\'lo.\"") { "Hel'lo." }
+    check(:string, "[==[foo\\\"bar\\'baz\\r\\n]==]") { "foo\\\"bar\\'baz\\r\\n" }
   end
   
   it "matches tables" do
-    check(:table, "{}", AST::Table.new)
-    check(:table, "{1}", AST::Table.new([[nil, AST::Number.new(1)]]))
-    # Not sure how to proceed with comparing tables here.
+    check(:table, "{}") { [:table] }
+    check(:table, "{1}") { [:table, [:pair, nil, 1.0]] }
+    check(:table, "{1, 2}") {
+      [:table, [:pair, nil, 1.0],
+               [:pair, nil, 2.0]]
+    }
+    check(:table, "{foo=1}") { [:table, [:pair, "foo", 1.0]] }
+    check(:table, "{[1+1]=1}") { [:table, [:pair, [:+, 1.0, 1.0], 1.0]] }
   end
   
   it "matches binary operations" do
-    check(:expression, "1 + 1", AST::Addition.new(AST::Number.new(1), AST::Number.new(1)))
+    check(:expression, "1 + 1") { [:+, 1.0, 1.0] }
   end
 end

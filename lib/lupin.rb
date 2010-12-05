@@ -4,6 +4,7 @@ module Lupin
   require "lupin/ast"
   require "lupin/parser"
   require "lupin/compiler"
+  require "lupin/library"
   
   def self.eval (str)
     ast = Lupin::Parser.parse(str, :root => :expression).value

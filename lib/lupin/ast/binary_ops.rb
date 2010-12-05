@@ -15,55 +15,73 @@ module Lupin::AST
   
   class Addition < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __add in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :+, 1
+    end
+    
+    def sexp
+      [:+, @lhs.sexp, @rhs.sexp]
     end
   end
   
   class Subtraction < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __sub in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :-, 1
+    end
+    
+    def sexp
+      [:-, @lhs.sexp, @rhs.sexp]
     end
   end
   
   class Multiplication < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __mul in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :*, 1
+    end
+    
+    def sexp
+      [:*, @lhs.sexp, @rhs.sexp]
     end
   end
   
   class Division < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __div in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :/, 1
+    end
+    
+    def sexp
+      [:/, @lhs.sexp, @rhs.sexp]
     end
   end
   
   class Modulo < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __mod in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :%, 1
+    end
+    
+    def sexp
+      [:%, @lhs.sexp, @rhs.sexp]
     end
   end
   
   class Power < BinaryOp
     def bytecode (g)
-      # TODO: Implement lookup of __pow in @lhs's metatable
       @lhs.bytecode(g)
       @rhs.bytecode(g)
       g.send :**, 1
+    end
+    
+    def sexp
+      [:**, @lhs.sexp, @rhs.sexp]
     end
   end
   

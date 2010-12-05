@@ -18,6 +18,10 @@ module Lupin::AST
       @operand.bytecode(g)
       g.send :"-@", 0
     end
+    
+    def sexp
+      [:"@-", @operand.sexp]
+    end
   end
   
   class Negation < UnaryOp
@@ -27,6 +31,10 @@ module Lupin::AST
       
       g.push_false
       g.send :"==", 1
+    end
+    
+    def sexp
+      [:not, @operand.sexp]
     end
   end
   

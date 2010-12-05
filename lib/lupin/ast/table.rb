@@ -11,6 +11,12 @@ module Lupin::AST
     def [] (key)
       @fields[key]
     end
+    
+    def sexp
+      fields = []
+      @fields.each {|field| fields << [:pair, field[0].sexp, field[1].sexp]}
+      [:table, *fields]
+    end
   end
   
   class TableGet

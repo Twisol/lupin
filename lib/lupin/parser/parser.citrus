@@ -20,10 +20,10 @@ grammar Lupin::Parser::Lua
     (var:( variable
          | ('(' WS? expression WS? ')') { expression.value }
          )
-     args:args+
+     args:(WS? args)+
     ) {
       f = var.value
-      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.value)}
+      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.args.value)}
       f
     }
   end
@@ -147,8 +147,8 @@ grammar Lupin::Parser::Lua
   
   rule prefix_expr
     ( ('(' WS? expression WS? ')') { expression.value }
-    | variable
     | functioncall
+    | variable
     )
   end
   
@@ -202,7 +202,7 @@ grammar Lupin::Parser::Lua
     | (k:identifier WS? '=' WS? v:expression)
         { [k.value, v.value] }
     | (v:expression '')
-        { [nil, v.value] }
+        { [Lupin::AST::Nil.new, v.value] }
     )
   end
   

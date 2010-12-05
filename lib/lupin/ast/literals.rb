@@ -7,11 +7,11 @@ module Lupin::AST
     end
     
     def == (literal)
-      @value == literal.value
+      @value == literal
     end
     
-    def bytecode (g)
-      g.push_literal @value
+    def sexp
+      @value
     end
   end
   
@@ -35,6 +35,10 @@ module Lupin::AST
       
       super(str)
     end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::String.new(@value)
+    end
   end
   
   class LongString < Literal
@@ -42,11 +46,19 @@ module Lupin::AST
       str = str[1..-1] if str[0,1] == "\n"
       super(str)
     end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::String.new(@value)
+    end
   end
   
   class Number < Literal
     def initialize (base, exponent=0)
-      super(base.to_f * (10 ** exponent))
+      super(base.to_f * 10 ** exponent)
+    end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::Number.new(@value)
     end
   end
   
@@ -60,11 +72,19 @@ module Lupin::AST
     def initialize
       super(false)
     end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::False
+    end
   end
   
   class Nil < Literal
     def initialize
       super(nil)
+    end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::Nil
     end
   end
 end
