@@ -53,4 +53,9 @@ describe Lupin::Parser do
     check(:expression, "1%2%3") { [:%, [:%, 1.0, 2.0], 3.0] }
     check(:expression, "1^2^3") { [:**, 1.0, [:**, 2.0, 3.0]] }
   end
+  
+  it "matches unary operations" do
+    check(:expression, "--1") { [:"-@", [:"-@", 1.0]] }
+    check(:expression, "not not true") { [:not, [:not, true]] }
+  end
 end

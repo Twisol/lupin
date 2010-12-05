@@ -184,9 +184,7 @@ grammar Lupin::Parser::Lua
   
   ### Table
   rule table
-    ( ('{' WS? fieldlist WS? '}') { Lupin::AST::Table.new(fieldlist.value) }
-    | ('{' WS? '}') { Lupin::AST::Table.new }
-    )
+    ('{' WS? list:(fieldlist|'') WS? '}') <Lupin::Parser::TableLiteral>
   end
   
   rule fieldlist
@@ -197,13 +195,10 @@ grammar Lupin::Parser::Lua
   end
   
   rule field
-    ( ('[' WS? k:expression WS? ']' WS? '=' WS? v:expression)
-        { [k.value, v.value] }
-    | (k:identifier WS? '=' WS? v:expression)
-        { [k.value, v.value] }
-    | (v:expression '')
-        { [Lupin::AST::Nil.new, v.value] }
-    )
+    ( '[' WS? k:expression WS? ']' WS? '=' WS? v:expression
+    | k:identifier WS? '=' WS? v:expression
+    | k:'' v:expression
+    ) <Lupin::Parser::Pair>
   end
   
   rule fieldsep
@@ -212,9 +207,8 @@ grammar Lupin::Parser::Lua
   
   ### Number
   rule number
-    ( /0x[A-Fa-f0-9]+/ { Lupin::AST::Number.new(to_i(16)) }
-    | (base exponent) { Lupin::AST::Number.new(base.value, exponent.value) }
-    | (base '') { Lupin::AST::Number.new(base.value) }
+    ( /0x[A-Fa-f0-9]+/ <Lupin::Parser::HexLiteral>
+    | (base exponent:(exponent|'')) <Lupin::Parser::DecimalLiteral>
     )
   end
   
@@ -228,9 +222,9 @@ grammar Lupin::Parser::Lua
   
   ### String
   rule string
-    ( ("\"" s:/(\\.|[^\"\n])*/m "\"") { Lupin::AST::String.new(s.value) }
-    | ('\'' s:/(\\.|[^\'\n])*/m '\'') { Lupin::AST::String.new(s.value) }
-    | /\[(=*)\[.*?\]\1\]/m { Lupin::AST::LongString.new(match(/\[(=*)\[(.*?)\]\1\]/m)[2]) }
+    ( ("\"" str:/(\\.|[^\"\n])*/m "\"") <Lupin::Parser::StringLiteral>
+    | ('\'' str:/(\\.|[^\'\n])*/m '\'') <Lupin::Parser::StringLiteral>
+    | str: /\[(=*)\[.*?\]\1\]/m <Lupin::Parser::LongStringLiteral>
     )
   end
   

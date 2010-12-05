@@ -37,4 +37,57 @@ module Lupin::Parser
       [self].concat(list.matches).map {|m| m.item.value}
     end
   end
+  
+  module StringLiteral
+    def value
+      s = str.to_s
+      s.gsub! /\\(\d{1,3}|\D)/m do
+        seq = $1
+        case seq
+          when 'a'  then "\a"
+          when 'b'  then "\b"
+          when 'f'  then "\f"
+          when 'n'  then "\n"
+          when 'r'  then "\r"
+          when 't'  then "\t"
+          when 'v'  then "\v"
+          when "\r" then "\n"
+          when /\d{1,3}/ then seq.to_i.chr
+          else seq
+        end
+      end
+      
+      Lupin::AST::String.new(s)
+    end
+  end
+  
+  module LongStringLiteral
+    def value
+      Lupin::AST::String.new(match(/\[(=*)\[\n?(.*?)\]\1\]/m)[2])
+    end
+  end
+  
+  module HexLiteral
+    def value
+      Lupin::AST::Number.new(to_i(16))
+    end
+  end
+  
+  module DecimalLiteral
+    def value
+      Lupin::AST::Number.new(base.value, exponent == '' ? 0 : exponent.value)
+    end
+  end
+  
+  module TableLiteral
+    def value
+      Lupin::AST::Table.new(list == '' ? [] : list.value)
+    end
+  end
+  
+  module Pair
+    def value
+      [k == '' ? Lupin::AST::Nil.new : k.value, v.value]
+    end
+  end
 end

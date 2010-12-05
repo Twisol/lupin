@@ -20,7 +20,7 @@ module Lupin::AST
     end
     
     def sexp
-      [:"@-", @operand.sexp]
+      [:"-@", @operand.sexp]
     end
   end
   
