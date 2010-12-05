@@ -1,7 +1,7 @@
 require "citrus"
 
 module Lupin::Parser
-  require "lupin/parser/operators"
+  require "lupin/parser/actions"
   
   Citrus.load(File.join(File.dirname(__FILE__), 'parser', 'parser'))
   
