@@ -14,7 +14,7 @@ loop do
     break unless expr
     puts "=> #{Lupin.eval(expr.chomp)}"
   rescue => ex
-    puts ex.backtrace
+    puts ex, ex.backtrace
   end
 end
 

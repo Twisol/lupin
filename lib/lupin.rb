@@ -7,7 +7,7 @@ module Lupin
   require "lupin/library"
   
   def self.eval (str)
-    ast = Lupin::Parser.parse(str, :root => :expression).value
+    ast = Lupin::Parser.parse(str, :root => :expression, :consume => true).value
     Lupin::Compiler.compile(ast).execute
   end
 end

@@ -9,7 +9,7 @@ describe Lupin::Parser do
   end
   
   def check (type, text)
-    m = parse(text, :root => type)
+    m = parse(text, :root => type, :consume => :true)
     # Ensure that it matched everything
     m.to_s.should == text
     # Ensure that the AST is what we expected
