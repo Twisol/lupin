@@ -176,9 +176,8 @@ grammar Lupin::Parser::Lua
     ( table
     | number
     | string
-    | 'nil' { Lupin::AST::Nil.new }
-    | 'false' { Lupin::AST::False.new }
-    | 'true' { Lupin::AST::True.new }
+    | boolean
+    | nil
     )
   end
   
@@ -226,6 +225,18 @@ grammar Lupin::Parser::Lua
     | ('\'' str:/(\\.|[^\'\n])*/m '\'') <Lupin::Parser::StringLiteral>
     | str: /\[(=*)\[.*?\]\1\]/m <Lupin::Parser::LongStringLiteral>
     )
+  end
+ 
+  ### Boolean
+  rule boolean
+    ( 'false' { Lupin::AST::False.new }
+    | 'true' { Lupin::AST::True.new }
+    )
+  end
+  
+  ### Nil
+  rule nil
+    'nil' { Lupin::AST::Nil.new }
   end
   
   ### Whitespace and comments

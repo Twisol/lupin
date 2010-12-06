@@ -34,6 +34,12 @@ describe Lupin::Parser do
     check(:string, "[==[foo\\\"bar\\'baz\\r\\n]==]") { "foo\\\"bar\\'baz\\r\\n" }
   end
   
+  it "matches booleans and nil" do
+    check(:boolean, "true") { true }
+    check(:boolean, "false") { false }
+    check(:nil, "nil") { nil }
+  end
+  
   it "matches tables" do
     check(:table, "{}") { [:table] }
     check(:table, "{1}") { [:table, [:pair, nil, 1.0]] }
