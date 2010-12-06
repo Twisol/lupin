@@ -39,6 +39,10 @@ module Lupin::AST
     def initialize
       super(true)
     end
+    
+    def bytecode (g)
+      g.push_literal Lupin::Library::True
+    end
   end
   
   class False < Literal

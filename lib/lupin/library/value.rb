@@ -15,7 +15,11 @@ module Lupin::Library
       @value.to_s
     end
     
-    def + (other)
+    def to_bool
+      @value ? true : false
+    end
+    
+    def math_op (sym, other)
       raise "Metatables not implemented yet"
     end
     
@@ -47,7 +51,7 @@ module Lupin::Library
       if other.is_a? Number
         @value.send(sym, other.value)
       else
-        super
+        super(sym, other)
       end
     end
   end
