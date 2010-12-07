@@ -21,7 +21,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal Lupin::Library::String.new(@value)
+      g.push_literal Lupin::Types::String.new(@value)
     end
   end
   
@@ -31,7 +31,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal Lupin::Library::Number.new(@value)
+      g.push_literal Lupin::Types::Number.new(@value)
     end
   end
   
@@ -41,7 +41,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal Lupin::Library::True
+      g.push_literal Lupin::Types::True
     end
   end
   
@@ -51,7 +51,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal Lupin::Library::False
+      g.push_literal Lupin::Types::False
     end
   end
   
@@ -61,7 +61,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal Lupin::Library::Nil
+      g.push_literal Lupin::Types::Nil
     end
   end
 end
