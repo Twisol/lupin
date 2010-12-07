@@ -9,9 +9,7 @@ describe Lupin::Parser do
   end
   
   def check (type, text)
-    m = parse(text, :root => type, :consume => :true)
-    # Ensure that it matched everything
-    m.to_s.should == text
+    m = parse(text, :root => type)
     # Ensure that the AST is what we expected
     m.value.sexp.should == yield
   end
@@ -61,7 +59,11 @@ describe Lupin::Parser do
   end
   
   it "matches unary operations" do
-    check(:expression, "--1") { [:"-@", [:"-@", 1.0]] }
+    check(:expression, "--1") { [:-@, [:-@, 1.0]] }
     check(:expression, "not not true") { [:not, [:not, true]] }
+  end
+  
+  it "respects order of operations" do
+    check(:expression, "1 - -4 * 6") { [:-, 1, [:*, [:-@, 4.0], 6.0]] }
   end
 end
