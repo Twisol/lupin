@@ -8,11 +8,11 @@ module Lupin::Types
     end
     
     def inspect
-      to_s
+      @value.inspect
     end
     
     def to_s
-      @value.to_s
+      inspect
     end
     
     def to_bool

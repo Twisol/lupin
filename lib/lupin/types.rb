@@ -3,6 +3,7 @@ module Lupin::Types
   
   require "lupin/types/nil"
   require "lupin/types/boolean"
+  require "lupin/types/number"
   require "lupin/types/string"
   require "lupin/types/table"
   require "lupin/types/function"
