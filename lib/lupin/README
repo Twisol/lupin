@@ -1,0 +1,6 @@
+parser/
+  Contains the grammar for the Lua language, and the actions which translate the raw data into objects.
+ast/
+  Defines the nodes within Lupin's abstract syntax tree, and the Rubinius bytecode instructions they map to.
+types/
+  Implements the behavior for each of the core Lua value types.
