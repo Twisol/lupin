@@ -19,12 +19,39 @@ module Lupin::Types
       @value ? true : false
     end
     
-    def math_op (sym, other)
-      raise "Metatables not implemented yet"
+    def + (other)
+    end
+    
+    def - (other)
+    end
+    
+    def * (other)
+    end
+    
+    def / (other)
+    end
+    
+    def % (other)
+    end
+    
+    def ** (other)
+    end
+    
+    def -@ (other)
     end
     
     def == (other)
-      self.is_a?(other.class) && @value == other.value
+    end
+    
+    def <= (other)
+      other <= self
+    end
+    
+    def < (other)
+      other < self
+    end
+    
+    def concatenate (other)
     end
   end
 end
