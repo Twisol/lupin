@@ -42,10 +42,12 @@ module Lupin::AST
   # Relational operations
   ###
   Equal    = BinaryOp.for :==
+  NotEqual = BinaryOp.for :not_equal # Ruby 1.8 doesn't recognize :!=
   AtMost   = BinaryOp.for :<=
   AtLeast  = BinaryOp.for :>=
   LessThan = BinaryOp.for :<
   MoreThan = BinaryOp.for :>
+  
   
   
   ###

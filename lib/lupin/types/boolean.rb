@@ -4,7 +4,7 @@ module Lupin::Types
     ::Lupin::Types::False = new(false)
     
     def self.new (value)
-      value ? @True : @False
+      value ? True : False
     end
   end
 end

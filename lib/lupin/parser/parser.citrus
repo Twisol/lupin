@@ -80,12 +80,12 @@ grammar Lupin::Parser::Lua
   
   rule eql_expr
     (lhs:concat_expr
-     list:(WS? op:( '<' { Lupin::AST::LessThan }
-                  | '>' { Lupin::AST::GreaterThan }
+     list:(WS? op:( '==' { Lupin::AST::Equal }
+                  | '~=' { Lupin::AST::NotEqual }
                   | '<=' { Lupin::AST::AtMost }
                   | '>=' { Lupin::AST::AtLeast }
-                  | '~=' { Lupin::AST::NotEqual }
-                  | '==' { Lupin::AST::Equal }
+                  | '<' { Lupin::AST::LessThan }
+                  | '>' { Lupin::AST::MoreThan }
                   )
            WS? rhs:concat_expr
           )*

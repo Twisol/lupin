@@ -8,15 +8,53 @@ module Lupin::Types
       end
     end
     
+    def to_s
+      sprintf("%.14g", @value)
+    end
+    
     math_op :+, :-, :*, :/, :%, :**, :-@
+    
+    def == (other)
+      if other.is_a? Number
+        Boolean.new(@value == other.value)
+      else
+        super
+      end
+    end
+    
+    def <= (other)
+      if other.is_a? Number
+        Boolean.new(@value <= other.value)
+      else
+        super
+      end
+    end
+    
+    def < (other)
+      if other.is_a? Number
+        Boolean.new(@value < other.value)
+      else
+        super
+      end
+    end
+    
+    def concatenate (other)
+      if other.is_a? String
+        String.new(to_s).concatenate(other)
+      else
+        super
+      end
+    end
 
   private
     def math (op, other)
       # Attempt to coerce a string into a number
       other = other.to_number if other.is_a? String
-      # Then do the math if 'other' is a number.
-      Number.new(@value.send(op, other.value)) if other.is_a? Number
-      # If 'other' simple isn't a number, nil is returned.
+      if other.is_a? Number
+        Number.new(@value.send(op, other.value))
+      else
+        Nil
+      end
     end
   end
 end
