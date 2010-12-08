@@ -47,7 +47,7 @@ module Lupin::Types
     def == (other)
       case other
       when self.class
-        Boolean.new(@value.equal?(other.value)) # TODO: check metatable for __eq
+        @value.equal?(other.value) ? True : False # TODO: check metatable for __eq
       when Value
         False
       else
@@ -57,7 +57,7 @@ module Lupin::Types
     
     # Ruby 1.8 doesn't recognize != as a method name
     def not_equal (other)
-      Boolean.new(!(self == other).to_bool)
+      (self == other).to_bool ? False : True
     end
     
     def <= (other)
