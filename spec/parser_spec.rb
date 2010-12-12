@@ -9,9 +9,8 @@ describe Lupin::Parser do
   end
   
   def check (type, text)
-    m = parse(text, :root => type)
-    # Ensure that the AST is what we expected
-    m.value.sexp.should == yield
+    ast = parse(text, :root => type)
+    ast.sexp.should == yield
   end
   
   it "matches numbers" do

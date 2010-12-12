@@ -7,12 +7,13 @@ Bundler.setup
 require "lupin"
 
 # Extremely basic, stupid-simple REPL.
+lua = Lupin::State.new
 loop do
   print '> '
   begin
     expr = gets
     break unless expr
-    puts "=> #{Lupin.eval(expr.chomp)}"
+    puts "=> #{Lupin.eval(lua, expr.chomp)}"
   rescue => ex
     ex.render
   end

@@ -1,4 +1,5 @@
 require "citrus"
+require "lupin/ast"
 
 module Lupin::Parser
   require "lupin/parser/actions"
@@ -6,6 +7,6 @@ module Lupin::Parser
   Citrus.load(File.join(File.dirname(__FILE__), 'parser', 'parser'))
   
   def self.parse (subject, opts={}, *args, &blk)
-    Lua.parse(subject, {:consume => true}.merge(opts), *args, &blk)
+    Lua.parse(subject, {:consume => true}.merge(opts), *args, &blk).value
   end
 end

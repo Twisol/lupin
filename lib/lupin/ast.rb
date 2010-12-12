@@ -1,3 +1,5 @@
+require "lupin/types"
+
 module Lupin
   module AST
     require "lupin/ast/literals"
