@@ -2,6 +2,12 @@ require 'lupin/generator'
 
 module Lupin
   class State
+    attr_reader :metatables 
+    
+    def initialize
+      @metatables = {}
+    end
+    
     def compile (ast)
       g = Generator.new(self)
       

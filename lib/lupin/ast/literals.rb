@@ -7,7 +7,7 @@ module Lupin::AST
     end
     
     def bytecode (g)
-      g.push_literal @value
+      g.push_literal Lupin::Value.new(@value)
     end
     
     def sexp
