@@ -127,8 +127,8 @@ module Lupin
         g.pop
         # data, Lupin::Parser, data, opts
         
-        g.send :parse, 2        # data, match
-        g.send :value, 0        # data, ast
+        g.send :parse, 2        # data, ast
+        g.send :value, 0        # data, result
         g.rotate 2              # result, data
         g.pop                   # result
       g.pop_unwind
