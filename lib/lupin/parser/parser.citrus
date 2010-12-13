@@ -166,7 +166,7 @@ grammar Lupin::Parser::Lua
   end
   
   rule identifier
-    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
+    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::Literal.new(to_s) }
   end
   
   ####
@@ -229,14 +229,14 @@ grammar Lupin::Parser::Lua
  
   ### Boolean
   rule boolean
-    ( 'false' { Lupin::AST::False.new }
-    | 'true' { Lupin::AST::True.new }
+    ( 'false' { Lupin::AST::Literal.new(false) }
+    | 'true' { Lupin::AST::Literal.new(true) }
     )
   end
   
   ### Nil
   rule nil
-    'nil' { Lupin::AST::Nil.new }
+    'nil' { Lupin::AST::Literal.new(nil) }
   end
   
   ### Whitespace and comments

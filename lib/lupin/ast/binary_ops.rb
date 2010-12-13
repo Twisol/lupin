@@ -6,23 +6,24 @@ module Lupin::AST
     end
     
     # Helper method for defining binary operations
-    def self.for (sym)
+    def self.for (sym, op)
       # Create a sublass of BinaryOp
-      op = Class.new(self) do
+      klass = Class.new(self) do
         def bytecode (g)
           @lhs.bytecode(g)
           @rhs.bytecode(g)
-          g.send self.class::OP, 1
+          g.send self.class::OP
         end
         
         def sexp
-          [self.class::OP, @lhs.sexp, @rhs.sexp]
+          [self.class::SEXP, @lhs.sexp, @rhs.sexp]
         end
       end
       
-      # Store the operation symbol as a constant on the new class.
-      op.const_set :OP, sym
-      op
+      # Store the symbols as constants on the new class.
+      klass.const_set :OP, op
+      klass.const_set :SEXP, sym
+      klass
     end
   end
   
@@ -30,23 +31,23 @@ module Lupin::AST
   ###
   # Simple operations
   ###
-  Addition       = BinaryOp.for :+
-  Subtraction    = BinaryOp.for :-
-  Multiplication = BinaryOp.for :*
-  Division       = BinaryOp.for :/
-  Modulo         = BinaryOp.for :%
-  Power          = BinaryOp.for :**
-  Concatenate    = BinaryOp.for :concatenate
+  Addition       = BinaryOp.for :+,    :add
+  Subtraction    = BinaryOp.for :-,    :sub
+  Multiplication = BinaryOp.for :*,    :mul
+  Division       = BinaryOp.for :/,    :div
+  Modulo         = BinaryOp.for :%,    :mod
+  Power          = BinaryOp.for :**,   :pow
+  Concatenate    = BinaryOp.for :"..", :concat
   
   ###
   # Relational operations
   ###
-  Equal    = BinaryOp.for :==
-  NotEqual = BinaryOp.for :not_equal # Ruby 1.8 doesn't recognize :!=
-  AtMost   = BinaryOp.for :<=
-  AtLeast  = BinaryOp.for :>=
-  LessThan = BinaryOp.for :<
-  MoreThan = BinaryOp.for :>
+  Equal    = BinaryOp.for :==,   :eq
+  NotEqual = BinaryOp.for :"!=", :neq
+  AtMost   = BinaryOp.for :<=,   :le
+  AtLeast  = BinaryOp.for :>=,   :ge
+  LessThan = BinaryOp.for :<,    :lt
+  MoreThan = BinaryOp.for :>,    :gt
   
   
   

@@ -2,8 +2,6 @@ Bundler.setup
 require 'lupin'
 
 describe Lupin::Parser do
-  AST = Lupin::AST
-  
   def parse (*args, &blk)
     Lupin::Parser.parse(*args, &blk)
   end
