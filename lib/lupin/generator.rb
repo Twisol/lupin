@@ -3,7 +3,8 @@ require 'lupin/value'
 module Lupin
   class Generator
     def initialize (lstate)
-      @state, @g = lstate, Rubinius::Generator.new
+      @state = lstate
+      @g = Rubinius::Generator.new
     end
     
     def push_literal (arg)
@@ -72,7 +73,7 @@ module Lupin
       g.send :==, 1            # lhs, rhs, (is-number?)
       g.gif else_label
         # lhs, rhs
-        g.rotate 2               # rhs, lhs
+        g.swap                   # rhs, lhs
         g.send :try_tonumber, 0
         g.dup                    # rhs, lhs, lhs
         g.send :type, 0          # rhs, lhs, type
@@ -80,11 +81,11 @@ module Lupin
         g.send :==, 1            # rhs, lhs, (is-number?)
         g.gif else2_label
           # rhs, lhs
-          g.rotate 2           # lhs, rhs
+          g.swap               # lhs, rhs
           g.send op, 1         # sum
           g.goto done_label
         else2_label.set!
-          g.rotate 2           # lhs, rhs
+          g.swap               # lhs, rhs
         # Fall through to the outer else clause
       else_label.set!
         # lhs, rhs
@@ -102,7 +103,7 @@ module Lupin
     def puts_top
       g.dup
       g.push_self
-      g.rotate 2
+      g.swap
       g.send :p, 1, true
       g.pop
     end
