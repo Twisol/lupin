@@ -23,6 +23,5 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.0.0)
-  citrus (~> 2.2.0)
   lupin!
   rspec (~> 2.2.0)

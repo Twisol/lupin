@@ -3,6 +3,8 @@ module Lupin
   require "lupin/parser"
   require "lupin/state"
   
+  # Evaluate a string as a chunk of Lua code.
+  # CAVEAT: Really only works for expressions right now.
   def self.eval (state, str)
     ast = Lupin::Parser.parse(str, :root => :expression)
     state.compile(ast).call

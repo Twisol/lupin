@@ -87,7 +87,7 @@ module Lupin::Parser
   
   module Pair
     def value
-      [k == '' ? Lupin::AST::Literal.new(nil) : k.value, v.value]
+      [k == '' ? nil : k.value, v.value]
     end
   end
 end

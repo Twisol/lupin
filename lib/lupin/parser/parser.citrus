@@ -4,7 +4,7 @@ grammar Lupin::Parser::Lua
   end
   
   rule chunk
-    list:statement* { matches.map(&:value) }
+    list:statement* { matches.map {|stat| stat.value} }
   end
   
   rule statement
@@ -29,10 +29,10 @@ grammar Lupin::Parser::Lua
   end
   
   rule args
-    ( ('(' WS? explist WS? ')' WS?) { explist.value }
-    | ('(' WS? ')' WS?) { [] }
-    | (table WS?) { [table] }
-    | (string WS?) { [string] }
+    ( ('(' WS? explist WS? ')') { explist.value }
+    | ('(' WS? ')') { [] }
+    | (table) { [table] }
+    | (string) { [string] }
     )
   end
   

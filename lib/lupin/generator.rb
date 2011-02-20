@@ -11,6 +11,23 @@ module Lupin
       g.push_literal(arg)
     end
     
+    def push_table
+      g.push_literal Lupin::Types::Table
+      g.send :new, 0
+    end
+    
+    def dup_top
+      g.dup
+    end
+    
+    def pop
+      g.pop
+    end
+    
+    def ret
+      g.ret
+    end
+    
     def add
       math :+, '__add'
     end
@@ -40,8 +57,8 @@ module Lupin
       g.push_literal "Hello from the unfinished concatenation routine"
     end
     
-    def ret
-      g.ret
+    def set_table
+      g.send :[]=, 2
     end
     
     def assemble (name, file, line)

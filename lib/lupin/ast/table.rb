@@ -1,15 +1,24 @@
 module Lupin::AST
   class Table
     def initialize (fieldlist=[])
-      @fields = fieldlist
+      @fields = {}
+      current_integer = 0
+      fieldlist.each do |k, v|
+        k ||= Lupin::AST::Literal.new(current_integer += 1)
+        @fields[k] = v
+      end
     end
     
-    def == (other)
-      @fields == other.instance_variable_get(:@fields)
-    end
-    
-    def [] (key)
-      @fields[key]
+    def bytecode (g)
+      g.push_table
+      
+      @fields.each do |k, v|
+        g.dup_top
+        k.bytecode(g)
+        v.bytecode(g)
+        g.set_table
+        g.pop
+      end
     end
     
     def sexp
