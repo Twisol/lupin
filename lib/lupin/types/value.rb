@@ -16,6 +16,14 @@ module Lupin::Types
       @value ? true : false
     end
     
+    def hash
+      @value.hash
+    end
+    
+    def eql? (val)
+      val.eql? @value
+    end
+    
     def + (other)
       Nil
     end

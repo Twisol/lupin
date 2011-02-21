@@ -57,25 +57,25 @@ module Lupin::Parser
         end
       end
       
-      Lupin::AST::Literal.new(s)
+      Lupin::AST::String.new(s)
     end
   end
   
   module LongStringLiteral
     def value
-      Lupin::AST::Literal.new(match(/\[(=*)\[\n?(.*?)\]\1\]/m)[2])
+      Lupin::AST::String.new(match(/\[(=*)\[\n?(.*?)\]\1\]/m)[2])
     end
   end
   
   module HexLiteral
     def value
-      Lupin::AST::Literal.new(to_i(16))
+      Lupin::AST::Number.new(to_i(16))
     end
   end
   
   module DecimalLiteral
     def value
-      Lupin::AST::Literal.new(base.value * 10 ** (exponent == '' ? 0 : exponent.value))
+      Lupin::AST::Number.new(base.value * 10 ** (exponent == '' ? 0 : exponent.value))
     end
   end
   

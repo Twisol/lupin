@@ -16,6 +16,17 @@ module Lupin
       
       Code.new(g.assemble("<eval>", :dynamic, 1))
     end
+    
+    def getmetamethod (obj, name)
+      case obj
+      when Lupin::Types::Table, Lupin::Types::Userdatum
+        mt = @metatables[obj]
+      else
+        mt = @metatables[obj.class]
+      end
+      
+      mt && mt[name]
+    end
   end
   
   class Code

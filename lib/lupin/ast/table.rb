@@ -1,12 +1,11 @@
 module Lupin::AST
   class Table
     def initialize (fieldlist=[])
-      @fields = {}
       current_integer = 0
-      fieldlist.each do |k, v|
-        k ||= Lupin::AST::Literal.new(current_integer += 1)
-        @fields[k] = v
+      fieldlist.each do |a|
+        a[0] ||= Lupin::AST::Number.new(current_integer += 1)
       end
+      @fields = fieldlist
     end
     
     def bytecode (g)
@@ -30,7 +29,18 @@ module Lupin::AST
   
   class TableGet
     def initialize (tbl, key)
-      @tbl, @key = tbl, key
+      @tbl = tbl
+      @key = key
+    end
+    
+    def bytecode (g)
+      @tbl.bytecode(g)
+      @key.bytecode(g)
+      g.get_table
+    end
+    
+    def sexp
+      [:[], @tbl.sexp, @key.sexp]
     end
   end
 end

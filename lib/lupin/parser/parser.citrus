@@ -15,27 +15,6 @@ grammar Lupin::Parser::Lua
     ) { stat.value }
   end
   
-  ### Function invocation
-  rule functioncall
-    (var:( variable
-         | ('(' WS? expression WS? ')') { expression.value }
-         )
-     args:(WS? args)+
-    ) {
-      f = var.value
-      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.args.value)}
-      f
-    }
-  end
-  
-  rule args
-    ( ('(' WS? explist WS? ')') { explist.value }
-    | ('(' WS? ')') { [] }
-    | (table) { [table] }
-    | (string) { [string] }
-    )
-  end
-  
   ####
   ## Expressions (Operators & Precedence)
   #
@@ -142,31 +121,55 @@ grammar Lupin::Parser::Lua
   end
   
   rule basic_expr
-    ( primitive | prefix_expr )
-  end
-  
-  rule prefix_expr
-    ( ('(' WS? expression WS? ')') { expression.value }
+    ( primitive
     | functioncall
-    | variable
+    | indexer
+    | value_expr
     )
   end
   
-  ### Variable access
-  rule variable
-    ( identifier
-      list:( (WS? '.' WS? identifier) { identifier.value }
-           | (WS? '[' WS? expression WS? ']') { expression.value }
-           )*
+  rule value_expr
+    ( ('(' WS? expression WS? ')') { expression.value }
+  # | variable
+    )
+  end
+  
+  rule indexer
+    ( var:value_expr
+      args:( (WS? '[' WS? expression WS? ']') { expression.value }
+           | (WS? '.' WS? identifier) { identifier.value }
+           )+
     ) {
-      t = nil
-      [identifier].concat(list.matches).each {|m| t = Lupin::AST::TableGet.new(t, m.value) }
+      t = var.value
+      args.matches.each {|a| t = Lupin::AST::TableGet.new(t, a.value)}
       t
     }
   end
   
+  rule functioncall
+    ( var:value_expr
+      args:(WS? args)+
+    ) {
+      f = var.value
+      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.value)}
+      f
+    }
+  end
+  
+  rule args
+    ( ('(' WS? explist WS? ')') { explist.value }
+    | ('(' WS? ')') { [] }
+    | (table) { [table] }
+    | (string) { [string] }
+    )
+  end
+  
+  rule variable
+    (identifier)
+  end
+  
   rule identifier
-    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::Literal.new(to_s) }
+    /[A-Za-z_][A-Za-z_0-9]*/ { Lupin::AST::String.new(to_s) }
   end
   
   ####
@@ -229,14 +232,14 @@ grammar Lupin::Parser::Lua
  
   ### Boolean
   rule boolean
-    ( 'false' { Lupin::AST::Literal.new(false) }
-    | 'true' { Lupin::AST::Literal.new(true) }
+    ( 'true' { Lupin::AST::True }
+    | 'false' { Lupin::AST::False }
     )
   end
   
   ### Nil
   rule nil
-    'nil' { Lupin::AST::Literal.new(nil) }
+    'nil' { Lupin::AST::Nil }
   end
   
   ### Whitespace and comments

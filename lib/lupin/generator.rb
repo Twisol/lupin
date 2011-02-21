@@ -1,19 +1,31 @@
-require 'lupin/value'
-
 module Lupin
   class Generator
+    attr_reader :g, :state
+    private :g
+    
     def initialize (lstate)
       @state = lstate
       @g = Rubinius::Generator.new
     end
     
-    def push_literal (arg)
-      g.push_literal(arg)
+    def push_number (num)
+      g.push_literal Lupin::Types::Number.new(num)
+    end
+    
+    def push_string (str)
+      g.push_literal Lupin::Types::String.new(str)
     end
     
     def push_table
-      g.push_literal Lupin::Types::Table
-      g.send :new, 0
+      g.push_literal Lupin::Types::Table.new(@state)
+    end
+    
+    def push_bool (bool)
+      g.push_literal Lupin::Types::Boolean.new(bool)
+    end
+    
+    def push_nil
+      g.push_literal Lupin::Types::Nil
     end
     
     def dup_top
@@ -29,36 +41,40 @@ module Lupin
     end
     
     def add
-      math :+, '__add'
+      g.send :+, 1
     end
     
     def sub
-      math :-, '__sub'
+      g.send :-, 1
     end
     
     def mul
-      math :*, '__mul'
+      g.send :*, 1
     end
     
     def div
-      math :/, '__div'
+      g.send :/, 1
     end
     
     def mod
-      math :%, '__mod'
+      g.send :%, 1
     end
     
     def pow
-      math :**, '__pow'
+      g.send :**, 1
+    end
+    
+    def get_table
+      g.send :[], 1
+    end
+    
+    def set_table
+      g.send :[]=, 2
     end
     
     def concat
       g.pop_many 2
       g.push_literal "Hello from the unfinished concatenation routine"
-    end
-    
-    def set_table
-      g.send :[]=, 2
     end
     
     def assemble (name, file, line)
@@ -71,51 +87,7 @@ module Lupin
       g.package Rubinius::CompiledMethod
     end
     
-    attr_reader :g, :state
-    private :g
-    
   private
-    # Perform arithmetic on two operands, coercing them to numbers if possible.
-    # If one of the operands is not number-like, try to invoke a metamethod.
-    def math (op, metamethod)
-      else_label = g.new_label
-      else2_label = g.new_label
-      done_label = g.new_label
-      
-      # lhs, rhs
-      g.send :try_tonumber, 0
-      g.dup                    # lhs, rhs, rhs
-      g.send :type, 0          # lhs, rhs, type
-      g.push_literal :number   # lhs, rhs, type, :number
-      g.send :==, 1            # lhs, rhs, (is-number?)
-      g.gif else_label
-        # lhs, rhs
-        g.swap                   # rhs, lhs
-        g.send :try_tonumber, 0
-        g.dup                    # rhs, lhs, lhs
-        g.send :type, 0          # rhs, lhs, type
-        g.push_literal :number   # rhs, lhs, type, :number
-        g.send :==, 1            # rhs, lhs, (is-number?)
-        g.gif else2_label
-          # rhs, lhs
-          g.swap               # lhs, rhs
-          g.send op, 1         # sum
-          g.goto done_label
-        else2_label.set!
-          g.swap               # lhs, rhs
-        # Fall through to the outer else clause
-      else_label.set!
-        # lhs, rhs
-        # Code will go here for metatables. If the metamethod doesn't exist,
-        # raise an error.
-        g.pop_many 2
-        g.push_self
-        g.push_literal "Cannot call #{metamethod}: Metatables aren't implemented yet."
-        g.send :raise, 1, true
-      done_label.set!
-      # result
-    end
-    
     # Used intermittently for debugging. Equivalent to p(arg)
     def puts_top
       g.dup

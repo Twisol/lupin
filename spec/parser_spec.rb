@@ -37,10 +37,10 @@ describe Lupin::Parser do
   
   it "matches tables" do
     check(:table, "{}") { [:table] }
-    check(:table, "{1}") { [:table, [:pair, nil, 1.0]] }
+    check(:table, "{1}") { [:table, [:pair, 1.0, 1.0]] }
     check(:table, "{1, 2}") {
-      [:table, [:pair, nil, 1.0],
-               [:pair, nil, 2.0]]
+      [:table, [:pair, 1.0, 1.0],
+               [:pair, 2.0, 2.0]]
     }
     check(:table, "{foo=1}") { [:table, [:pair, "foo", 1.0]] }
     check(:table, "{[1+1]=1}") { [:table, [:pair, [:+, 1.0, 1.0], 1.0]] }
