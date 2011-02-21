@@ -18,8 +18,12 @@ module Lupin::AST
   end
   
   class Number < Literal
+    def initialize (val)
+      super(val.to_f)
+    end
+    
     def bytecode (g)
-      g.push_number value.to_f
+      g.push_number value
     end
   end
   
