@@ -148,20 +148,16 @@ grammar Lupin::Parser::Lua
   
   rule functioncall
     ( var:value_expr
-      args:(WS? args)+
+      args:( (WS? '(' WS? explist WS? ')') { explist.value }
+           | (WS? '(' WS? ')') { [] }
+           | (WS? table) { [table] }
+           | (WS? string) { [string] }
+           )+
     ) {
       f = var.value
       args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.value)}
       f
     }
-  end
-  
-  rule args
-    ( ('(' WS? explist WS? ')') { explist.value }
-    | ('(' WS? ')') { [] }
-    | (table) { [table] }
-    | (string) { [string] }
-    )
   end
   
   rule variable
