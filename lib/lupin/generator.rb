@@ -64,6 +64,32 @@ module Lupin
       g.send :**, 1
     end
     
+    def lt
+      g.send :<, 1
+    end
+    
+    def le
+      g.send :<=, 1
+    end
+    
+    def eq
+      g.send :==, 1
+    end
+    
+    def ge
+      g.send :>=, 1
+    end
+    
+    def gt
+      g.send :>, 1
+    end
+    
+    def neq
+      eq
+      push_bool false
+      eq
+    end
+    
     def get_table
       g.send :[], 1
     end

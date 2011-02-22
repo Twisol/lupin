@@ -43,7 +43,7 @@ module Lupin::AST
   # Relational operations
   ###
   Equal    = BinaryOp.for :==,   :eq
-  NotEqual = BinaryOp.for :"!=", :neq
+  NotEqual = BinaryOp.for :'!=', :neq
   AtMost   = BinaryOp.for :<=,   :le
   AtLeast  = BinaryOp.for :>=,   :ge
   LessThan = BinaryOp.for :<,    :lt

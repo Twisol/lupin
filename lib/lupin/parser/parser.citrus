@@ -130,7 +130,7 @@ grammar Lupin::Parser::Lua
   
   rule value_expr
     ( ('(' WS? expression WS? ')') { expression.value }
-  # | variable
+    | variable
     )
   end
   
@@ -161,7 +161,7 @@ grammar Lupin::Parser::Lua
   end
   
   rule variable
-    (identifier)
+    ('' identifier) { Lupin::AST::Variable.new(identifier.value) }
   end
   
   rule identifier
