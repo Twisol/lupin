@@ -9,4 +9,13 @@ module Lupin
     ast = Lupin::Parser.parse(str, :root => :expression)
     state.compile(ast).call
   end
+  
+  def self.sexp (state, str)
+    Lupin::Parser.parse(str, :root => :expression).sexp
+  end
+  
+  def self.bytecode (state, str)
+    ast = Lupin::Parser.parse(str, :root => :expression)
+    state.compile(ast).decode
+  end
 end
