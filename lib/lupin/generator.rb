@@ -6,6 +6,7 @@ module Lupin
     def initialize (lstate)
       @state = lstate
       @g = Rubinius::Generator.new
+      @env = Lupin::Types::Table.new(@state)
     end
     
     def push_number (num)
