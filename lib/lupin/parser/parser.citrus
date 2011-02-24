@@ -122,10 +122,25 @@ grammar Lupin::Parser::Lua
   
   rule basic_expr
     ( primitive
-    | functioncall
-    | indexer
+    | function_expr
     | value_expr
     )
+  end
+  
+  rule function_expr
+    ( lhs:value_expr
+      list:( op:('') { Lupin::AST::Call }
+             rhs:( ('(' WS? ')') { [] }
+                 | ('(' WS? explist WS? ')') { explist.value }
+                 | (WS? table) { [table.value] }
+                 | (WS? string) { [string] }
+                 )
+           | op:('') { Lupin::AST::Variable }
+             rhs:( (WS? '[' WS? expression WS? ']') { expression.value }
+                 | (WS? '.' WS? identifier) { identifier.value }
+                 )
+           )+
+    ) <Lupin::Parser::LeftAssoc>
   end
   
   rule value_expr
@@ -134,34 +149,8 @@ grammar Lupin::Parser::Lua
     )
   end
   
-  rule indexer
-    ( var:value_expr
-      args:( (WS? '[' WS? expression WS? ']') { expression.value }
-           | (WS? '.' WS? identifier) { identifier.value }
-           )+
-    ) {
-      t = var.value
-      args.matches.each {|a| t = Lupin::AST::TableGet.new(t, a.value)}
-      t
-    }
-  end
-  
-  rule functioncall
-    ( var:value_expr
-      args:( (WS? '(' WS? explist WS? ')') { explist.value }
-           | (WS? '(' WS? ')') { [] }
-           | (WS? table) { [table] }
-           | (WS? string) { [string] }
-           )+
-    ) {
-      f = var.value
-      args.matches.each {|a| f = Lupin::AST::FunctionCall.new(f, a.value)}
-      f
-    }
-  end
-  
   rule variable
-    ('' identifier) { Lupin::AST::Variable.new(identifier.value) }
+    ('' identifier) { Lupin::AST::Variable.new(nil, identifier.value) }
   end
   
   rule identifier

@@ -5,7 +5,7 @@ module Lupin
     attr_reader :metatables 
     
     def initialize
-      @metatables = {}
+      @env = Lupin::Types::Table.new
     end
     
     def compile (ast)
@@ -17,24 +17,15 @@ module Lupin
       Code.new(g.assemble("<eval>", :dynamic, 1))
     end
     
-    def getmetamethod (obj, name)
-      case obj
-      when Lupin::Types::Table, Lupin::Types::Userdatum
-        mt = @metatables[obj]
-      else
-        mt = @metatables[obj.class]
-      end
-      
-      mt && mt[name]
+    def globals
+      @env
     end
   end
   
   class Code
-    attr_reader :cm
-    
     def initialize (cm)
-      @cm = cm
       Rubinius.add_method :call, cm, Rubinius.object_metaclass(self), :public
+      @cm = cm
     end
     
     # Execute the compiled method

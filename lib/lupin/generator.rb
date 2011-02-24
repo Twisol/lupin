@@ -6,7 +6,10 @@ module Lupin
     def initialize (lstate)
       @state = lstate
       @g = Rubinius::Generator.new
-      @env = Lupin::Types::Table.new(@state)
+    end
+    
+    def push_environment
+      g.push_literal @state.globals
     end
     
     def push_number (num)
@@ -18,7 +21,7 @@ module Lupin
     end
     
     def push_table
-      g.push_literal Lupin::Types::Table.new(@state)
+      g.push_literal Lupin::Types::Table.new
     end
     
     def push_bool (bool)
@@ -91,17 +94,21 @@ module Lupin
       eq
     end
     
-    def get_table
+    def get_variable
       g.send :[], 1
     end
     
-    def set_table
+    def set_variable
       g.send :[]=, 2
     end
     
     def concat
       g.pop_many 2
       g.push_literal "Hello from the unfinished concatenation routine"
+    end
+    
+    def call (count)
+      g.send :call, count
     end
     
     def assemble (name, file, line)
@@ -114,7 +121,6 @@ module Lupin
       g.package Rubinius::CompiledMethod
     end
     
-  private
     # Used intermittently for debugging. Equivalent to p(arg)
     def puts_top
       g.dup

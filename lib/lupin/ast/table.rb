@@ -15,7 +15,7 @@ module Lupin::AST
         g.dup_top
         k.bytecode(g)
         v.bytecode(g)
-        g.set_table
+        g.set_variable
         g.pop
       end
     end
@@ -24,23 +24,6 @@ module Lupin::AST
       fields = []
       @fields.each {|field| fields << [:pair, field[0].sexp, field[1].sexp]}
       [:table, *fields]
-    end
-  end
-  
-  class TableGet
-    def initialize (tbl, key)
-      @tbl = tbl
-      @key = key
-    end
-    
-    def bytecode (g)
-      @tbl.bytecode(g)
-      @key.bytecode(g)
-      g.get_table
-    end
-    
-    def sexp
-      [:[], @tbl.sexp, @key.sexp]
     end
   end
 end

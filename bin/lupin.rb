@@ -8,6 +8,8 @@ require "lupin"
 
 # Extremely basic, stupid-simple REPL.
 lua = Lupin::State.new
+lua.globals['exit'] = Kernel.method(:exit)
+
 loop do
   print '> '
   begin
