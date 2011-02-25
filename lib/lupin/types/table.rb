@@ -25,5 +25,9 @@ module Lupin::Types
       str << @hash.to_a.map {|k, v| "[#{k}] = #{v}"}.join(', ')
       str << '}'
     end
+    
+    def value
+      @hash
+    end
   end
 end

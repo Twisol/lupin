@@ -4,24 +4,24 @@ module Lupin::Types
     attr_reader :value
     protected :value
     
-    def initialize (value)
-      @value = value
+    def initialize (val)
+      @value = val
     end
     
     def to_s
-      @value.inspect
+      value.inspect
     end
     
     def to_bool
-      @value ? true : false
+      value ? true : false
     end
     
     def hash
-      @value.hash
+      value.hash
     end
     
     def eql? (val)
-      val.eql? @value
+      val.eql? value
     end
     
     def + (other)
@@ -96,6 +96,10 @@ module Lupin::Types
     
     def concatenate (other)
       Nil
+    end
+    
+    def value
+      @value
     end
   end
 end

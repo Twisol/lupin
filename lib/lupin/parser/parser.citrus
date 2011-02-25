@@ -135,7 +135,7 @@ grammar Lupin::Parser::Lua
                  | (WS? table) { [table.value] }
                  | (WS? string) { [string] }
                  )
-           | op:('') { Lupin::AST::Variable }
+           | op:('') { Lupin::AST::Indexer }
              rhs:( (WS? '[' WS? expression WS? ']') { expression.value }
                  | (WS? '.' WS? identifier) { identifier.value }
                  )
@@ -150,7 +150,7 @@ grammar Lupin::Parser::Lua
   end
   
   rule variable
-    ('' identifier) { Lupin::AST::Variable.new(nil, identifier.value) }
+    ('' identifier) { Lupin::AST::Variable.new(identifier.value) }
   end
   
   rule identifier

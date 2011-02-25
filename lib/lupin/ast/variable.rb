@@ -1,37 +1,34 @@
 module Lupin::AST
   class Variable
-    def initialize (parent, identifier)
-      @parent = parent
+    def initialize (identifier)
       @name = identifier
     end
     
     def bytecode (g)
-      push_parent(g)
+      g.push_environment
       @name.bytecode(g)
-      g.get_variable
-    end
-    
-    def set_value (g)
-      push_parent(g)
-      swap_stack
-      
-      @name.bytecode(g)
-      swap_stack
-      
-      g.set_variable
+      g.table_get
     end
     
     def sexp
-      [:variable, @parent ? @parent.sexp : nil, @name.sexp]
+      [:variable, @name.sexp]
     end
+  end
   
-  protected
-    def push_parent(g)
-      if @parent == nil
-        g.push_environment
-      else
-        @parent.bytecode(g)
-      end
+  class Indexer
+    def initialize (container, key)
+      @container = container
+      @key = key
+    end
+    
+    def bytecode (g)
+      @container.bytecode(g)
+      @key.bytecode(g)
+      g.table_get
+    end
+    
+    def sexp
+      [:[], @container.sexp, @key.sexp]
     end
   end
 end

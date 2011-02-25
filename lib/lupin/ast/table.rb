@@ -15,7 +15,7 @@ module Lupin::AST
         g.dup_top
         k.bytecode(g)
         v.bytecode(g)
-        g.set_variable
+        g.table_set
         g.pop
       end
     end

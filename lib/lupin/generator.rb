@@ -94,11 +94,11 @@ module Lupin
       eq
     end
     
-    def get_variable
+    def table_get
       g.send :[], 1
     end
     
-    def set_variable
+    def table_set
       g.send :[]=, 2
     end
     
