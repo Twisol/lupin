@@ -273,7 +273,7 @@ end
 
 class Lupin::Instruction::CLOSURE < Lupin::Instruction
   def compile (g)
-    g.closure _A, _Bx
+    g.new_closure _Bx
     g.local_set _A
   end
 end

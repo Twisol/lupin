@@ -21,7 +21,7 @@ class Lupin::State
       
       raise "Invalid file header" unless stream.read(:header) == build_header
       
-      Lupin::Code.new(stream.read(:function))
+      Lupin::Function.new(stream.read(:prototype))
     else
       raise "Lua text format isn't supported yet."
     end

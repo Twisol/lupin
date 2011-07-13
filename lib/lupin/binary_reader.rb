@@ -44,9 +44,8 @@ class Lupin::BinaryReader
       register_Bx = bytes >> 8
       
       Lupin::Instruction[opcode].new(register_A, register_Bx)
-      #Lupin::Instruction.new(register_A, register_Bx)
-    when :function
-      f = Lupin::Function.new(@state)
+    when :prototype
+      f = Lupin::Prototype.new(@state)
       
       f.name = read(:string)
       f.first_line = read(:integer)
@@ -58,13 +57,14 @@ class Lupin::BinaryReader
       
       f.instructions = read(:list) {read(:instruction)}
       f.constants = read(:list) {read(:constant)}
-      f.functions = read(:list) {read(:function)}
+      f.prototypes = read(:list) {read(:prototype)}
       
       f.lines = read(:list) {read(:integer)}
       f.locals = read(:list) {[read(:string), read(:integer), read(:integer)]}
       f.upvalues = read(:list) {read(:string)}
       
       f.compile
+      f
     end
   end
 end

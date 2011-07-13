@@ -13,6 +13,5 @@ end
 state.set_global :funny, method(:funny)
 
 function = state.loadfile("luac.out")
-
 puts function.decode
 puts function.call

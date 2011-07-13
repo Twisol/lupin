@@ -3,6 +3,7 @@ class Lupin::Generator
     @g = Rubinius::Generator.new
     @state = state
     @constants = function.constants
+    @prototypes = function.prototypes
     
     @ips = []    
     @current_ip = 0
@@ -274,5 +275,10 @@ class Lupin::Generator
     else
       local_set base
     end
+  end
+  
+  def new_closure (index)
+    prototype = @prototypes[index]
+    @g.create_block prototype.cm
   end
 end
