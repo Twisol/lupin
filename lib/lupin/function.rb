@@ -1,3 +1,4 @@
+# Represents the Lua function prototype that backs a function instance.
 class Lupin::Prototype
   attr_accessor :name, :first_line, :last_line, :upvalue_count,
                 :parameter_count, :is_vararg, :maxstack, :instructions,
@@ -20,10 +21,9 @@ class Lupin::Prototype
     @cm = g.assemble("hi", "lolwat")
   end
   
-  def attach (target)
+  def attach (sym, target)
     compile unless @cm
-    Rubinius.add_method :call, @cm, target, :public
-    target
+    Rubinius.add_method sym, @cm, target, :public
   end
   
   def decode
@@ -36,9 +36,9 @@ class Lupin::Prototype
 end
 
 class Lupin::Function
-  def initialize (code)
-    code.attach(class << self; self; end)
-    @code = code
+  def initialize (proto)
+    proto.attach :call, (class << self; self; end)
+    @proto = proto
   end
   
   # Replaced by the compiled method
@@ -47,6 +47,6 @@ class Lupin::Function
   end
   
   def decode
-    @code.decode
+    @proto.decode
   end
 end

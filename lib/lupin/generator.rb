@@ -278,7 +278,6 @@ class Lupin::Generator
   end
   
   def new_closure (index)
-    prototype = @prototypes[index]
-    @g.create_block prototype.cm
+    # TODO
   end
 end

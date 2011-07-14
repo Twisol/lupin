@@ -271,21 +271,79 @@ class Lupin::Instruction::LE < Lupin::Instruction
   end
 end
 
-class Lupin::Instruction::CLOSURE < Lupin::Instruction
-  def compile (g)
-    g.new_closure _Bx
-    g.local_set _A
-  end
-end
-
 class Lupin::Instruction::TEST < Lupin::Instruction
   def compile (g)
     g.local_get _A
-    
     if _C == 0
       g.jump_if_false 1
     else
       g.jump_if_true 1
     end
+  end
+end
+
+class Lupin::Instruction::TESTSET < Lupin::Instruction
+  def compile (g)
+    g.local_get _B
+    
+    g.push_top
+    if _C == 0
+      g.jump_if_false 1
+    else
+      g.jump_if_true 1
+    end
+    
+    g.local_set _A
+  end
+end
+
+# These are disabled until upvalues are working.
+=begin
+class Lupin::Instruction::FORPREP < Lupin::Instruction
+  def compile (g)
+    g.local_get _A
+    g.local_get _A+2
+    g.sub
+    g.local_set _A
+    
+    g.jump _sBx
+  end
+end
+
+class Lupin::Instruction::FORLOOP < Lupin::Instruction
+  def compile (g)
+    # Increment the count by the step
+    g.local_get _A
+    g.local_get _A+2
+    g.add
+    g.push_top
+    g.local_set _A
+    
+    # Check if the count is still within the limit
+    g.local_get _A+1
+    g.lt
+    g.jump_if_false 0
+    
+    # Set the loop index and go back to the start
+    g.local_get _A
+    g.local_set _A+3
+    g.jump _sBx
+  end
+end
+=end
+
+class Lupin::Instruction::CLOSURE < Lupin::Instruction
+  def compile (g)
+    raise NotImplementedError
+    
+    # TODO: Write new_closure so this works
+    g.new_closure _Bx
+    g.local_set _A
+  end
+end
+
+class Lupin::Instruction::CLOSE < Lupin::Instruction
+  def compile (g)
+    raise NotImplementedError
   end
 end
