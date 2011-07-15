@@ -11,10 +11,7 @@ class Lupin::Prototype
   
   def compile
     g = Lupin::Generator.new(@state, self)
-    
-    instructions.each do |op|
-      op.compile(g)
-    end
+    instructions.compile(g)
     
     # TODO: use useful names
     @cm = g.assemble("hi", "lolwat")

@@ -358,9 +358,7 @@ class Lupin::Generator
     @upvalue_count = proto.upvalue_count
   end
   
-  def ref_upval (index)
-    return unless closing?
-    
+  def upvalue_ref (index)
     @g.dup_top
     @g.send :upvalues, 0
     
@@ -368,13 +366,9 @@ class Lupin::Generator
     
     @g.send :<<, 1
     @g.pop
-    
-    @upvalue_count -= 1
   end
   
-  def ref_local (local)
-    return unless closing?
-    
+  def local_ref (local)
     @g.dup_top
     @g.send :upvalues, 0
     
@@ -391,26 +385,17 @@ class Lupin::Generator
     @g.send :<<, 1
     @g.pop
     
-    @upvalue_count -= 1
     @upvalue_locals[local] = true
   end
   
   def unref_locals (base)
     locals = []
-    @upvalue_locals.each_key do |i,_|
-      if i >= base
-        @g.push_nil
-        local_set i
-        
-        locals << i
-      end
-    end
+    @upvalue_locals.each_key {|i| locals << i if i >= base}
     
-    locals.each {|i| @upvalue_locals.delete(i)}
-  end
-  
-  
-  def closing?
-    @upvalue_count > 0
+    locals.each do |i|
+      @upvalue_locals.delete(i)
+      @g.push_nil
+      local_set i
+    end
   end
 end

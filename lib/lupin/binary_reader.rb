@@ -48,7 +48,7 @@ class Lupin::BinaryReader
       f.is_vararg = read(:byte)
       f.maxstack = read(:byte)
       
-      f.instructions = read(:list) {read(:instruction)}
+      f.instructions = Lupin::InstructionSet.new(read(:list) {read(:instruction)})
       f.constants = read(:list) {read(:constant)}
       f.prototypes = read(:list) {read(:prototype)}
       
