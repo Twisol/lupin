@@ -45,22 +45,37 @@ class Lupin::State
   end
   
   def add (lhs, rhs)
-    # Ensure that all Lua numbers are floats
-    lhs = lhs.to_f if lhs.is_a?(Integer)
-    rhs = rhs.to_f if rhs.is_a?(Integer)
-    
+    arith_op :+, lhs, rhs
+  end
+  
+  def sub (lhs, rhs)
+    arith_op :-, lhs, rhs
+  end
+  
+  def arith_op (op, lhs, rhs)
     if lhs.is_a?(Numeric) && rhs.is_a?(Numeric)
-      lhs + rhs
+      lhs.to_f.__send__(op, rhs.to_f)
     else
       left  = Float(lhs) rescue nil if lhs.is_a?(String)
       right = Float(rhs) rescue nil if rhs.is_a?(String)
       
       if left && right
-        left + right
+        left.__send__(op, right)
       else
-        which = (lhs.is_a?(Numeric)) ? lhs : rhs
+        which = (lhs.is_a?(Numeric)) ? rhs : lhs
         raise TypeError, "attempt to perform arithmetic on a #{typeof(which)} value"
       end
+    end
+  end
+  
+  def lt (lhs, rhs)
+    if lhs.is_a?(String) && rhs.is_a?(String)
+      lhs < rhs
+    elsif lhs.is_a?(Numeric) && rhs.is_a?(Numeric)
+      lhs < rhs
+    else
+      # TODO: error
+      raise TypeError
     end
   end
   

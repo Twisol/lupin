@@ -36,14 +36,7 @@ class Lupin::BinaryReader
     when :header
       read(12)
     when :instruction
-      bytes = read(:size_t)
-      opcode = bytes & 0b0011_1111
-      bytes >>= 6
-      
-      register_A = bytes & 0b1111_1111
-      register_Bx = bytes >> 8
-      
-      Lupin::Instruction[opcode].new(register_A, register_Bx)
+      Lupin::Instruction.new(read(:size_t))
     when :prototype
       f = Lupin::Prototype.new(@state)
       

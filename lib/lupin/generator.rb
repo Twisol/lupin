@@ -1,3 +1,11 @@
+class Lupin::Reference
+  attr_accessor :value
+  
+  def initialize (value=nil)
+    @value = value
+  end
+end
+
 class Lupin::Generator
   def initialize (state, function)
     @g = Rubinius::Generator.new
@@ -5,15 +13,19 @@ class Lupin::Generator
     @constants = function.constants
     @prototypes = function.prototypes
     
-    @ips = []    
+    # Goto labels to map jumps from Lua opcode counts to Rubinius counts
+    @ips = []
     @current_ip = 0
     
+    @upvalue_locals = {} # Track which visible locals are held by closures.
+    @upvalue_count = 0 # How many upvalues are left to add to a new closure?
+    
+    # Shift the parameters into place.
     if function.parameter_count > 0
-      # Put the parameters into locals.
       # This mutates the params array, but that's okay: the leftovers are used
       # in the VARARGS instruction.
       push_parameters
-      function.parameter_count.times do |i|
+      (function.parameter_count).times do |i|
         @g.shift_array
         local_set i
       end
@@ -25,6 +37,7 @@ class Lupin::Generator
     @g.name = name.to_sym
     @g.file = file.to_sym
     @g.set_line 0
+    @g.splat_index = 0
     
     @g.use_detected
     @g.close
@@ -69,12 +82,16 @@ class Lupin::Generator
     (b) ? @g.push_true : @g.push_false
   end
   
+  def push_number (n)
+    @g.push_literal n.to_f
+  end
+  
   def push_constant (register)
     @g.push_literal @constants[register]
   end
   
   def push_rk (register)
-    if register & 256
+    if register & 256 == 1
       push_constant register & ~256
     else
       local_get register
@@ -87,10 +104,33 @@ class Lupin::Generator
   
   def local_get (register)
     @g.push_local register+1
+    @g.send :value, 0 if @upvalue_locals[register]
   end
   
   def local_set (register)
-    @g.set_local register+1
+    if @upvalue_locals[register]
+      @g.push_local register+1
+      @g.swap_stack
+      @g.send :value=, 1
+    else
+      @g.set_local register+1
+    end
+    @g.pop
+  end
+  
+  def upvalue_get (index)
+    @g.push_ivar :@upvalues
+    @g.push_int index
+    @g.send :[], 1
+    @g.send :value, 0
+  end
+  
+  def upvalue_set (index)
+    @g.push_ivar :@upvalues
+    @g.push_int index
+    @g.send :[], 1
+    @g.swap_stack
+    @g.send :value=, 1
     @g.pop
   end
   
@@ -115,7 +155,7 @@ class Lupin::Generator
     @g.pop
   end
   
-  def jump (offset)
+  def jump (offset, condition=nil)
     index = @current_ip+offset
     label = @ips[index]
     if !label
@@ -123,23 +163,21 @@ class Lupin::Generator
       @ips[index] = label
     end
     
-    @g.goto label
+    if condition
+      @g.goto_if_true label
+    elsif condition == false
+      @g.goto_if_false label
+    else
+      @g.goto label
+    end
   end
   
   def jump_if_true (offset)
-    done_label = @g.new_label
-    
-    @g.goto_if_true done_label
-    jump offset
-    done_label.set!
+    jump offset, true
   end
   
   def jump_if_false (offset)
-    done_label = @g.new_label
-    
-    @g.goto_if_false done_label
-    jump offset
-    done_label.set!
+    jump offset, false
   end
   
   def add
@@ -277,7 +315,102 @@ class Lupin::Generator
     end
   end
   
+  def tforloop (base, count)
+    # Call the iterator function
+    local_get base
+    local_get base+1
+    local_get base+2
+    @g.send :call, 2
+    @g.cast_multi_value
+    
+    # Assign the return values
+    (base+3).upto(base+2+count) do |i|
+      @g.shift_array
+      local_set i
+    end
+    @g.pop
+    
+    # Jump if the first return was true.
+    local_get base+3
+    @g.dup_top
+    @g.push_nil
+    @g.send :==, 1
+    @g.jump_if_true 1
+    
+    # Otherwise, set it as the current loop index.
+    local_set base+2
+  end
+  
+  def new_table (array_size, hash_size)
+    @g.push_literal Hash
+    @g.send :new, 0
+  end
+  
   def new_closure (index)
-    # TODO
+    proto = @prototypes[index]
+    @g.push_literal Lupin::Function
+    # Lupin::Function
+    @g.push_literal proto
+    # Lupin::Function proto
+    @g.send :new, 1
+    # function
+    
+    @upvalue_count = proto.upvalue_count
+  end
+  
+  def ref_upval (index)
+    return unless closing?
+    
+    @g.dup_top
+    @g.send :upvalues, 0
+    
+    upvalue_get index
+    
+    @g.send :<<, 1
+    @g.pop
+    
+    @upvalue_count -= 1
+  end
+  
+  def ref_local (local)
+    return unless closing?
+    
+    @g.dup_top
+    @g.send :upvalues, 0
+    
+    if @upvalue_locals[local]
+      local_get local
+    else
+      @g.push_literal Lupin::Reference
+      local_get local
+      @g.send :new, 1
+      @g.dup_top
+      local_set local
+    end
+    
+    @g.send :<<, 1
+    @g.pop
+    
+    @upvalue_count -= 1
+    @upvalue_locals[local] = true
+  end
+  
+  def unref_locals (base)
+    locals = []
+    @upvalue_locals.each_key do |i,_|
+      if i >= base
+        @g.push_nil
+        local_set i
+        
+        locals << i
+      end
+    end
+    
+    locals.each {|i| @upvalue_locals.delete(i)}
+  end
+  
+  
+  def closing?
+    @upvalue_count > 0
   end
 end

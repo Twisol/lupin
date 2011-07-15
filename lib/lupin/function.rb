@@ -13,7 +13,6 @@ class Lupin::Prototype
     g = Lupin::Generator.new(@state, self)
     
     instructions.each do |op|
-      g.pre_instruction
       op.compile(g)
     end
     
@@ -36,9 +35,12 @@ class Lupin::Prototype
 end
 
 class Lupin::Function
+  attr_accessor :upvalues
+  
   def initialize (proto)
     proto.attach :call, (class << self; self; end)
     @proto = proto
+    @upvalues = []
   end
   
   # Replaced by the compiled method
