@@ -40,10 +40,12 @@ class Lupin::State
   ### Primitive operations
   
   def get_global (name)
+    name = name.intern if typeof(name) == :string
     @globals[name]
   end
   
   def set_global (name, value)
+    name = name.intern if typeof(name) == :string
     @globals[name] = value
   end
   
@@ -164,7 +166,7 @@ class Lupin::State
   
   def call (f, args)
     if typeof(f) == :function
-      result = f.call(*args)
+      result = f.call(self, *args)
       result = [result] unless result.is_a?(Array)
       result
     else
@@ -175,6 +177,7 @@ class Lupin::State
   
   
   def typeof (value)
+    # TODO: Add :thread
     case value
     when Method, Proc, Lupin::Function then :function
     when Numeric then :number
@@ -187,14 +190,24 @@ class Lupin::State
   end
   
   def tonumber (value)
-    case value
-    when Numeric
+    case typeof(value)
+    when :number
       value.to_f
-    when String
+    when :string
       # TODO: Replace with a parser that handles Lua's numeric literal quirks.
       Float(value) rescue nil
     else
       nil
+    end
+  end
+  
+  def tostring (value)
+    case typeof(value)
+    when :string then value
+    when :number then "%.14g" % value
+    when :boolean then value.to_s
+    when :nil then "nil"
+    else "%s: %#09x" % [typeof(value), value.object_id]
     end
   end
   

@@ -29,7 +29,7 @@ class Lupin::BinaryReader
         when 0 then nil
         when 1 then read(:bool)
         when 3 then read(:number)
-        when 4 then read(:string).intern
+        when 4 then read(:string)
       end
     when :list
       read(:integer).times.map {yield}

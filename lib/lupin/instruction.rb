@@ -57,9 +57,9 @@ class Lupin::InstructionSet
         g.push_rk C(i)
         g.table_set
       when :ADD, :SUB, :MUL, :DIV, :MOD, :POW
-        binary_op g, @type.to_s.downcase
+        binary_op g, i, opcode(i).to_s.downcase
       when :UNM, :NOT, :LEN
-        unary_op g, @type.to_s.downcase
+        unary_op g, i, opcode(i).to_s.downcase
       when :CONCAT
         B(i).upto(C(i)) do |i|
           g.local_get i
@@ -142,6 +142,12 @@ class Lupin::InstructionSet
         
         g.jump sBx(i)
       when :FORLOOP
+        # Check if the count is still within the limit
+        g.local_get A(i)
+        g.local_get A(i)+1
+        g.lt
+        g.jump_if_false 0
+        
         # Increment the count by the step
         g.local_get A(i)
         g.local_get A(i)+2
@@ -149,19 +155,13 @@ class Lupin::InstructionSet
         g.push_top
         g.local_set A(i)
         
-        # Check if the count is still within the limit
-        g.local_get A(i)+1
-        g.lt
-        g.jump_if_false 0
-        
         # Set the loop index and go back to the start
-        g.local_get A(i)
         g.local_set A(i)+3
         g.jump sBx(i)
       when :TFORLOOP
         # Call the iterator function
         g.local_get A(i)
-        g.range_get A(i), 2
+        g.range_get A(i)+1, 2
         g.call
         g.range_set A(i)+3, C(i)
         
@@ -172,6 +172,7 @@ class Lupin::InstructionSet
         g.jump_if_true 1
         
         # Otherwise, set it as the current loop index.
+        g.local_get A(i)+3
         g.local_set A(i)+2
       when :NEWTABLE
         g.new_table B(i), C(i)
@@ -181,6 +182,7 @@ class Lupin::InstructionSet
         
         block_number = if C(i) == 0
           pc += 1
+          g.pre_instruction
           @instructions[pc]
         else
           C(i)
@@ -203,6 +205,7 @@ class Lupin::InstructionSet
         upvalues = g.new_closure Bx(i)
         upvalues.times do
           pc += 1
+          g.pre_instruction
           
           upvalue = @instructions[pc]
           case opcode(upvalue)
@@ -270,14 +273,14 @@ class Lupin::InstructionSet
   end
 
 protected
-  def binary_op (g, sym)
+  def binary_op (g, i, sym)
     g.push_rk B(i)
     g.push_rk C(i)
     g.__send__ sym
     g.local_set A(i)
   end
   
-  def unary_op (g, sym)
+  def unary_op (g, i, sym)
     g.local_get B(i)
     g.__send__ sym
     g.local_set A(i)
