@@ -20,22 +20,17 @@ class Lupin::Generator
     @upvalue_locals = {} # Track which visible locals are held by closures.
     @upvalue_count = 0 # How many upvalues are left to add to a new closure?
     
-    # Remove the Lupin::State passed as the first argument
-    push_parameters
-    @g.shift_array
-    @g.pop
-    
     # Shift the parameters into place.
     if function.parameter_count > 0
+      push_parameters
       # This mutates the params array, but that's okay: the leftovers are used
       # in the VARARGS instruction.
       (function.parameter_count).times do |i|
         @g.shift_array
         local_set i
       end
+      @g.pop
     end
-    
-    @g.pop
   end
   
   def assemble (name, file)

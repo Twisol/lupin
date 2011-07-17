@@ -166,7 +166,11 @@ class Lupin::State
   
   def call (f, args)
     if typeof(f) == :function
-      result = f.call(self, *args)
+      result = if f.is_a?(Lupin::Function)
+        f.call(*args)
+      else
+        f.call(self, *args)
+      end
       result = [result] unless result.is_a?(Array)
       result
     else
