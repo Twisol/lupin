@@ -36,7 +36,7 @@ class Lupin::BinaryReader
     when :header
       read(12)
     when :instruction
-      Lupin::Instruction.new(read(:size_t))
+      read(:size_t)
     when :prototype
       f = Lupin::Prototype.new(@state)
       

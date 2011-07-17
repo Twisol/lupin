@@ -118,6 +118,29 @@ class Lupin::Generator
     @g.pop
   end
   
+  def range_get (base, count)
+    if count >= 0
+      count.times do |i|
+        local_get base+i
+      end
+      @g.make_array count
+    else
+      local_get base
+    end
+  end
+  
+  def range_set (base, count)
+    if count >= 0
+      count.times do |i|
+        @g.shift_array
+        local_set base+i
+      end
+      @g.pop
+    else
+      local_set base
+    end
+  end
+  
   def upvalue_get (index)
     @g.push_ivar :@upvalues
     @g.push_int index
@@ -135,11 +158,11 @@ class Lupin::Generator
   end
   
   def table_get
-    @g.send :[], 1
+    call_primitive :index, 2
   end
   
   def table_set
-    @g.send :[]=, 2
+    call_primitive :newindex, 3
     @g.pop
   end
   
@@ -220,10 +243,6 @@ class Lupin::Generator
     done_label.set!
   end
   
-  def len
-    call_primitive :length, 1
-  end
-  
   def eq
     call_primitive :eq, 2
   end
@@ -237,108 +256,32 @@ class Lupin::Generator
   end
   
   def concat (count)
-    @g.string_build count
+    call_primitive :concat, 1
   end
   
-  
-  def call (base, params, returns)
-    if params >= 0
-      1.upto(params) do |i|
-        local_get base+i
-      end
-      @g.send :call, params
-    else
-      # It should be in an array here
-      local_get base+1
-      @g.push_nil
-      @g.send_with_splat :call, 0
-    end
-    
-    @g.cast_multi_value
-    
-    # Store the returns
-    if returns >= 0
-      returns.times do |i|
-        @g.shift_array
-        local_set base+i
-      end
-      @g.pop
-    else
-      local_set base
-    end
+  def len
+    call_primitive :len, 1
   end
   
-  def tailcall (base, params, returns)
+  def call
+    call_primitive :call, 2
+  end
+  
+  def tailcall (returns)
     # Rubinius doesn't support tailcalls, so this is currently
     # just a call-and-return.
-    
-    if params >= 0
-      1.upto(params) do |i|
-        local_get base+i
-      end
-      @g.send :call, params
-    else
-      local_get base+1
-      @g.push_nil
-      @g.send_with_splat :call, 0
-    end
-    
-    @g.cast_multi_value
+    call_primitive :call, 2
     @g.ret
   end
   
-  def return (base, returns)
-    if returns >= 0
-      returns.times do |i|
-        local_get base+i
-      end
-      @g.make_array returns
-    else
-      local_get base
-    end
-    
+  def return
     @g.ret
   end
   
   def vararg (base, count)
     push_parameters
     @g.send :dup, 0
-    
-    if count >= 0
-      count.times do |i|
-        @g.shift_array
-        local_set base+i
-      end
-      @g.pop
-    else
-      local_set base
-    end
-  end
-  
-  def tforloop (base, count)
-    # Call the iterator function
-    local_get base
-    local_get base+1
-    local_get base+2
-    @g.send :call, 2
-    @g.cast_multi_value
-    
-    # Assign the return values
-    (base+3).upto(base+2+count) do |i|
-      @g.shift_array
-      local_set i
-    end
-    @g.pop
-    
-    # Jump if the first return was true.
-    local_get base+3
-    @g.dup_top
-    @g.push_nil
-    @g.send :==, 1
-    @g.jump_if_true 1
-    
-    # Otherwise, set it as the current loop index.
-    local_set base+2
+    range_set(base, count)
   end
   
   def new_table (array_size, hash_size)
@@ -358,7 +301,7 @@ class Lupin::Generator
     @upvalue_count = proto.upvalue_count
   end
   
-  def upvalue_ref (index)
+  def share_upvalue (index)
     @g.dup_top
     @g.send :upvalues, 0
     
@@ -368,7 +311,7 @@ class Lupin::Generator
     @g.pop
   end
   
-  def local_ref (local)
+  def share_local (local)
     @g.dup_top
     @g.send :upvalues, 0
     
@@ -388,7 +331,7 @@ class Lupin::Generator
     @upvalue_locals[local] = true
   end
   
-  def unref_locals (base)
+  def unshare (base)
     locals = []
     @upvalue_locals.each_key {|i| locals << i if i >= base}
     
