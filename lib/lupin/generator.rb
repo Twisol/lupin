@@ -70,6 +70,10 @@ class Lupin::Generator
     @g.pop
   end
   
+  def move_down (num)
+    @g.move_down num
+  end
+  
   def push_top
     @g.dup_top
   end
@@ -202,6 +206,23 @@ class Lupin::Generator
   def jump_if_false (offset)
     jump offset, false
   end
+  
+  def if_else (proc_then=nil, proc_else=nil)
+    else_label = @g.new_label
+    done_label = @g.new_label
+    
+    @g.goto_if_false done_label
+    if proc_then
+      proc_then.call
+      @g.goto done_label
+    end
+    else_label.set!
+    if proc_else
+      proc_else.call
+    end
+    done_label.set!
+  end
+  
   
   def add
     call_primitive :add, 2

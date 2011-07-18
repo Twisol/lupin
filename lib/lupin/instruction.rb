@@ -135,28 +135,39 @@ class Lupin::InstructionSet
         
         g.local_set A(i)
       when :FORPREP
+        # Negative step for prep
         g.local_get A(i)
         g.local_get A(i)+2
         g.sub
         g.local_set A(i)
         
+        # Jump to the associated FORLOOP instruction
         g.jump sBx(i)
       when :FORLOOP
-        # Check if the count is still within the limit
+        # Do the conditional check
         g.local_get A(i)
         g.local_get A(i)+1
-        g.lt
-        g.jump_if_false 0
         
-        # Increment the count by the step
+        g.local_get A(i)+2
+        g.push_number 0.0
+        g.lt
+        g.if_else proc{
+          # If the step is negative, switch count < limit to limit < count
+          g.move_down 1
+        }
+        
+        g.lt
+        g.jump_if_false 0  # Break out of the loop
+        
+        # Increment the count
         g.local_get A(i)
         g.local_get A(i)+2
         g.add
         g.push_top
         g.local_set A(i)
+        g.local_set A(i)+3  # Set it to the visible loop local.
         
-        # Set the loop index and go back to the start
-        g.local_set A(i)+3
+        # Go to the top of the loop
         g.jump sBx(i)
       when :TFORLOOP
         # Call the iterator function
