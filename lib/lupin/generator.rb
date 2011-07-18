@@ -18,7 +18,6 @@ class Lupin::Generator
     @current_ip = 0
     
     @upvalue_locals = {} # Track which visible locals are held by closures.
-    @upvalue_count = 0 # How many upvalues are left to add to a new closure?
     
     # Shift the parameters into place.
     if function.parameter_count > 0
@@ -313,13 +312,8 @@ class Lupin::Generator
   def new_closure (index)
     proto = @prototypes[index]
     @g.push_literal Lupin::Function
-    # Lupin::Function
     @g.push_literal proto
-    # Lupin::Function proto
     @g.send :new, 1
-    # function
-    
-    @upvalue_count = proto.upvalue_count
   end
   
   def share_upvalue (index)
