@@ -121,9 +121,9 @@ class Lupin::State
   
   def concat (values)
     values.reduce("") do |acc, value|
-      value_num = tonumber(value)
-      if value_num
-        acc << v
+      value_str = tostring(value)
+      if value_str
+        acc << value
       else
         # TODO: try metatable
         raise TypeError, "attempt to concatenate a #{typeof(value)} value"

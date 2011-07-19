@@ -24,48 +24,64 @@ class Lupin::InstructionSet
       when :MOVE
         g.local_get B(i)
         g.local_set A(i)
+        g.pop
       when :LOADNIL
         g.push_nil
       when :LOADK
         g.push_constant Bx(i)
         g.local_set A(i)
+        g.pop
       when :LOADBOOL
         g.push_bool B(i) > 0
         g.local_set A(i)
+        g.pop
         
         g.jump 1 if C(i) > 0
       when :GETGLOBAL
-        g.global_get Bx(i)
+        g.push_constant Bx(i)
+        g.global_get
         g.local_set A(i)
+        g.pop
       when :SETGLOBAL
+        g.push_constant Bx(i)
         g.local_get A(i)
-        g.global_set Bx(i)
+        g.global_set
+        g.pop
       when :GETUPVAL
         g.upvalue_get B(i)
         g.local_set A(i)
+        g.pop
       when :SETUPVAL
         g.local_get A(i)
         g.upvalue_set B(i)
+        g.pop
       when :GETTABLE
         g.local_get B(i)
         g.push_rk C(i)
         g.table_get
         g.local_set A(i)
+        g.pop
       when :SETTABLE
         g.local_get A(i)
         g.push_rk B(i)
         g.push_rk C(i)
         g.table_set
+        g.pop
       when :ADD, :SUB, :MUL, :DIV, :MOD, :POW
         binary_op g, i, opcode(i).to_s.downcase
-      when :UNM, :NOT, :LEN
+      when :UNM, :LEN
         unary_op g, i, opcode(i).to_s.downcase
+      when :NOT
+        if_else proc {
+          push_bool false
+        }, proc {
+          push_bool true
+        }
       when :CONCAT
-        B(i).upto(C(i)) do |i|
-          g.local_get i
-        end
-        g.concat C(i)-B(i)+1
+        g.range_get B(i), C(i)-B(i)+1
+        g.concat
         g.local_set A(i)
+        g.pop
       when :JMP
         g.jump sBx(i)
       when :CALL
@@ -73,73 +89,58 @@ class Lupin::InstructionSet
         g.range_get A(i)+1, B(i)-1
         g.call
         g.range_set A(i), C(i)-1
+        g.pop
       when :RETURN
         g.range_get A(i), B(i)-1
         g.return
       when :TAILCALL
+        # Rubinius doesn't support tailcalls, so this is currently
+        # just a call-and-return.
         g.local_get A(i)
         g.range_get A(i)+1, B(i)-1
-        g.tailcall C(i)-1
+        g.call
+        g.return
       when :VARARG
         g.vararg A(i), B(i)-1
       when :SELF
         g.local_get B(i)
-        g.push_top
+        g.local_set A(i)+1
         g.push_rk C(i)
         g.table_get
-        g.local_set A(i)+1
         g.local_set A(i)
+        g.pop
       when :EQ
         g.push_rk B(i)
         g.push_rk C(i)
         g.eq
-        if A(i) == 0
-          g.jump_if_true 1
-        else
-          g.jump_if_false 1
-        end
+        g.jump 1, (A(i) == 0)
       when :LT
         g.push_rk B(i)
         g.push_rk C(i)
         g.lt
-        if A(i) == 0
-          g.jump_if_true 1
-        else
-          g.jump_if_false 1
-        end
+        g.jump 1, (A(i) == 0)
       when :LE
         g.push_rk B(i)
         g.push_rk C(i)
         g.le
-        if A(i) == 0
-          g.jump_if_true 1
-        else
-          g.jump_if_false 1
-        end
+        g.jump 1, (A(i) == 0)
       when :TEST
         g.local_get A(i)
-        if C(i) == 0
-          g.jump_if_false 1
-        else
-          g.jump_if_true 1
-        end
+        g.jump 1, (C(i) != 0)
       when :TESTSET
         g.local_get B(i)
+        g.jump 1, C(i) != 0
         
-        g.push_top
-        if C(i) == 0
-          g.jump_if_false 1
-        else
-          g.jump_if_true 1
-        end
-        
+        g.local_get B(i)
         g.local_set A(i)
+        g.pop
       when :FORPREP
         # Negative step for prep
         g.local_get A(i)
         g.local_get A(i)+2
         g.sub
         g.local_set A(i)
+        g.pop
         
         # Jump to the associated FORLOOP instruction
         g.jump sBx(i)
@@ -163,9 +164,9 @@ class Lupin::InstructionSet
         g.local_get A(i)
         g.local_get A(i)+2
         g.add
-        g.push_top
         g.local_set A(i)
         g.local_set A(i)+3  # Set it to the visible loop local.
+        g.pop
         
         # Go to the top of the loop
         g.jump sBx(i)
@@ -175,6 +176,7 @@ class Lupin::InstructionSet
         g.range_get A(i)+1, 2
         g.call
         g.range_set A(i)+3, C(i)
+        g.pop
         
         # Jump if the first return was nil
         g.local_get A(i)+3
@@ -185,9 +187,11 @@ class Lupin::InstructionSet
         # Otherwise, set it as the current loop index.
         g.local_get A(i)+3
         g.local_set A(i)+2
+        g.pop
       when :NEWTABLE
         g.new_table B(i), C(i)
         g.local_set A(i)
+        g.pop
       when :SETLIST
         g.local_get A(i)
         
@@ -209,6 +213,7 @@ class Lupin::InstructionSet
           g.push_number start+index
           g.local_get A(i)+index
           g.table_set
+          g.pop
         end
         
         g.pop
@@ -227,6 +232,7 @@ class Lupin::InstructionSet
           end
         end
         g.local_set A(i)
+        g.pop
       when :CLOSE
         g.unshare A(i)
       end

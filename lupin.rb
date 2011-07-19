@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 $:.unshift File.join(File.expand_path(File.dirname(__FILE__)), "lib")
 require "lupin"
+require "pp"
 
 
 state = Lupin::State.new
@@ -32,9 +33,9 @@ state.set_global :tostring, proc {|l, v|
   l.tostring(v)
 }
 
-
 $L = state
 
 function = state.loadfile("luac.out")
 #puts function.decode
+#pp function.instance_variable_get(:@proto).instructions.to_sexp
 puts function.call
