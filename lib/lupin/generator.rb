@@ -88,16 +88,18 @@ class Lupin::Generator
     else_label = @g.new_label
     done_label = @g.new_label
     
-    @g.goto_if_false done_label
     if proc_then
-      proc_then.call
+      @g.goto_if_false else_label
+        proc_then.call
       @g.goto done_label
+      else_label.set!
+        proc_else.call if proc_else
+      done_label.set!
+    elsif proc_else
+      @g.goto_if_true done_label
+        proc_else.call
+      done_label.set!
     end
-    else_label.set!
-    if proc_else
-      proc_else.call
-    end
-    done_label.set!
   end
   
   
