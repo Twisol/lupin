@@ -13,10 +13,6 @@ class Lupin::Generator
     @constants = function.constants
     @prototypes = function.prototypes
     
-    # Goto labels to map jumps from Lua opcode counts to Rubinius counts
-    @ips = []
-    @current_ip = 0
-    
     @upvalue_locals = {} # Track which visible locals are held by closures.
     
     # Shift the parameters into place.
@@ -45,28 +41,11 @@ class Lupin::Generator
   end
   
   
-  # Do stuff before each instruction
-  def pre_instruction
-    # Set a compile-time label for jumping to this instruction
-    label = @ips[@current_ip]
-    if !label
-      label = @g.new_label
-      @ips[@current_ip] = label
-    end
-    label.set!
-    @current_ip += 1
-    
-    # TODO: Check debughooks here
+  def new_label
+    @g.new_label
   end
   
-  def jump (offset, condition=nil)
-    index = @current_ip+offset
-    label = @ips[index]
-    if !label
-      label = @g.new_label
-      @ips[index] = label
-    end
-    
+  def jump (label, condition=nil)
     if condition
       @g.goto_if_true label
     elsif condition == false
@@ -85,24 +64,24 @@ class Lupin::Generator
   end
   
   def if_else (proc_then=nil, proc_else=nil)
-    else_label = @g.new_label
-    done_label = @g.new_label
+    else_label = new_label
+    done_label = new_label
     
     if proc_then
       if proc_else
-        @g.goto_if_false else_label
+        jump_if_false else_label
           proc_then.call
-        @g.goto done_label
+        jump done_label
         else_label.set!
           proc_else.call
         done_label.set!
       else
-        @g.goto_if_false done_label
+        jump_if_false done_label
           proc_then.call
         done_label.set!
       end
     elsif proc_else
-      @g.goto_if_true done_label
+      jump_if_true done_label
         proc_else.call
       done_label.set!
     end
@@ -143,6 +122,11 @@ class Lupin::Generator
     else
       local_get register
     end
+  end
+  
+  def push_vararg
+    push_parameters
+    @g.send :dup, 0
   end
   
   def local_get (register)
@@ -271,13 +255,6 @@ class Lupin::Generator
     @g.ret
   end
   
-  def vararg (base, count)
-    push_parameters
-    @g.send :dup, 0
-    range_set(base, count)
-    pop
-  end
-  
   def new_table (array_size, hash_size)
     @g.push_literal Hash
     @g.send :new, 0
@@ -288,6 +265,7 @@ class Lupin::Generator
     @g.push_literal Lupin::Function
     @g.push_literal proto
     @g.send :new, 1
+    proto.upvalue_count
   end
   
   def share_upvalue (index)

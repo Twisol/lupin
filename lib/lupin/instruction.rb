@@ -14,19 +14,25 @@ class Lupin::InstructionSet
   end
   
   def compile (g)
-    pc, length = 0, @instructions.length
+    # Create an array of labels, one per instruction.
+    labels = Array.new(@instructions.length) {g.new_label}
     
+    pc, length = 0, @instructions.length
     while pc < length
       i = @instructions[pc]
+      labels[pc].set!
       
-      g.pre_instruction
       case opcode(i)
       when :MOVE
         g.local_get B(i)
         g.local_set A(i)
         g.pop
       when :LOADNIL
-        g.push_nil
+        A(i).upto(B(i)) do |index|
+          g.push_nil
+          g.local_set index
+          g.pop
+        end
       when :LOADK
         g.push_constant Bx(i)
         g.local_set A(i)
@@ -36,7 +42,7 @@ class Lupin::InstructionSet
         g.local_set A(i)
         g.pop
         
-        g.jump 1 if C(i) > 0
+        g.jump labels[pc+2] if C(i) > 0
       when :GETGLOBAL
         g.push_constant Bx(i)
         g.global_get
@@ -68,9 +74,19 @@ class Lupin::InstructionSet
         g.table_set
         g.pop
       when :ADD, :SUB, :MUL, :DIV, :MOD, :POW
-        binary_op g, i, opcode(i).to_s.downcase
+        g.push_rk B(i)
+        g.push_rk C(i)
+        g.__send__ opcode(i).to_s.downcase
+        g.local_set A(i)
+      when :EQ, :LT, :LE
+        g.push_rk B(i)
+        g.push_rk C(i)
+        g.__send__ opcode(i).to_s.downcase
+        g.jump labels[pc+2], (A(i) == 0)
       when :UNM, :LEN
-        unary_op g, i, opcode(i).to_s.downcase
+        g.local_get B(i)
+        g.__send__ opcode(i).to_s.downcase
+        g.local_set A(i)
       when :NOT
         if_else proc {
           push_bool false
@@ -83,7 +99,7 @@ class Lupin::InstructionSet
         g.local_set A(i)
         g.pop
       when :JMP
-        g.jump sBx(i)
+        g.jump labels[pc+sBx(i)+1]
       when :CALL
         g.local_get A(i)
         g.range_get A(i)+1, B(i)-1
@@ -101,7 +117,9 @@ class Lupin::InstructionSet
         g.call
         g.return
       when :VARARG
-        g.vararg A(i), B(i)-1
+        g.push_vararg
+        g.range_set A(i), B(i)-1
+        g.pop
       when :SELF
         g.local_get B(i)
         g.local_set A(i)+1
@@ -109,27 +127,12 @@ class Lupin::InstructionSet
         g.table_get
         g.local_set A(i)
         g.pop
-      when :EQ
-        g.push_rk B(i)
-        g.push_rk C(i)
-        g.eq
-        g.jump 1, (A(i) == 0)
-      when :LT
-        g.push_rk B(i)
-        g.push_rk C(i)
-        g.lt
-        g.jump 1, (A(i) == 0)
-      when :LE
-        g.push_rk B(i)
-        g.push_rk C(i)
-        g.le
-        g.jump 1, (A(i) == 0)
       when :TEST
         g.local_get A(i)
-        g.jump 1, (C(i) != 0)
+        g.jump labels[pc+2], (C(i) != 0)
       when :TESTSET
         g.local_get B(i)
-        g.jump 1, C(i) != 0
+        g.jump labels[pc+2], (C(i) != 0)
         
         g.local_get B(i)
         g.local_set A(i)
@@ -143,7 +146,7 @@ class Lupin::InstructionSet
         g.pop
         
         # Jump to the associated FORLOOP instruction
-        g.jump sBx(i)
+        g.jump labels[pc+sBx(i)+1]
       when :FORLOOP
         # Do the conditional check
         g.local_get A(i)
@@ -158,7 +161,7 @@ class Lupin::InstructionSet
         }
         
         g.lt
-        g.jump_if_false 0  # Break out of the loop
+        g.jump_if_false labels[pc+1]  # Break out of the loop
         
         # Increment the count
         g.local_get A(i)
@@ -169,7 +172,7 @@ class Lupin::InstructionSet
         g.pop
         
         # Go to the top of the loop
-        g.jump sBx(i)
+        g.jump labels[pc+sBx(i)+1]
       when :TFORLOOP
         # Call the iterator function
         g.local_get A(i)
@@ -182,7 +185,7 @@ class Lupin::InstructionSet
         g.local_get A(i)+3
         g.push_nil
         g.eq
-        g.jump_if_true 1
+        g.jump_if_true labels[pc+2]
         
         # Otherwise, set it as the current loop index.
         g.local_get A(i)+3
@@ -197,7 +200,6 @@ class Lupin::InstructionSet
         
         block_number = if C(i) == 0
           pc += 1
-          g.pre_instruction
           @instructions[pc]
         else
           C(i)
@@ -221,7 +223,6 @@ class Lupin::InstructionSet
         upvalues = g.new_closure Bx(i)
         upvalues.times do
           pc += 1
-          g.pre_instruction
           
           upvalue = @instructions[pc]
           case opcode(upvalue)
